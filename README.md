@@ -3,8 +3,7 @@
 
 ## Overview
 
-This is the code for our paper **Subphenotype-Aware Motality Prediction for Sepsis-Associated Acute Kidney Injury with Bidirectional Graph Mamba
-**.
+This is the code for our paper **Subphenotype-Aware Motality Prediction for Sepsis-Associated Acute Kidney Injury with Bidirectional Graph Mamba**.
 
 ## Requirements:
 
