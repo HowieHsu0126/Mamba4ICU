@@ -1,7 +1,8 @@
--- -- Description: Main SQL script for the PostgreSQL database
--- -- Create the schema for the MIMIC-IV database
--- -- DROP SCHEMA IF EXISTS sa_aki_cohorts;
--- -- CREATE SCHEMA sa_aki_cohorts;
+-- Description: Main SQL script for the PostgreSQL database
+-- Create the schema for the MIMIC-IV database
+-- DROP SCHEMA IF EXISTS sa_aki_cohorts;
+-- CREATE SCHEMA sa_aki_cohorts;
+
 -- Create the concepts table
 \i '/home/hwxu/Projects/Dataset/PKU/KDD/Libs/data/pgsql/concepts.sql'
 -- Create the demographics table

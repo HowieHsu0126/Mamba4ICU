@@ -19,10 +19,8 @@ WITH eligible_patients AS (
         ad.dischtime
     FROM
         sa_aki_cohorts.sa_aki sa
-        INNER JOIN sa_aki_cohorts.demographics d ON sa.subject_id = d.subject_id
-            AND sa.hadm_id = d.hadm_id
-        INNER JOIN mimiciv_hosp.admissions ad ON sa.subject_id = ad.subject_id
-            AND sa.hadm_id = ad.hadm_id
+        JOIN sa_aki_cohorts.demographics d ON sa.subject_id = d.subject_id
+        JOIN mimiciv_hosp.admissions ad ON sa.subject_id = ad.subject_id
     WHERE
         d.age BETWEEN 18 AND 89 -- Age filter
         AND EXTRACT(EPOCH FROM (ad.dischtime - ad.admittime)) >= 86400 -- Stay duration filter (at least 24 hours)
@@ -50,7 +48,6 @@ non_eskd_patients AS (
             WHERE
                 icd_code IN ('N18.6', '585.6') -- ICD codes for ESKD
 ) eskd ON ep.subject_id = eskd.subject_id
-            AND ep.hadm_id = eskd.hadm_id
         WHERE
             eskd.subject_id IS NULL -- Exclude patients with ESKD
 ),
@@ -67,10 +64,9 @@ numbered_patients AS (
         nesp.gender,
         nesp.race,
         nesp.admission_type,
-        ROW_NUMBER() OVER (PARTITION BY nesp.subject_id ORDER BY nesp.aki_time) as rn
-    FROM
-        non_eskd_patients nesp
-)
+        ROW_NUMBER() OVER (PARTITION BY nesp.subject_id ORDER BY nesp.aki_time) AS rn
+FROM
+    non_eskd_patients nesp)
 -- Select the first row for each patient
 SELECT
     np.subject_id,
@@ -92,3 +88,4 @@ ORDER BY
     np.hadm_id,
     np.stay_id,
     np.aki_time;
+
