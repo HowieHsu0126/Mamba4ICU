@@ -1,9 +1,10 @@
-# {TITILE}
+# Subphenotype-Aware Motality Prediction for Sepsis-Associated Acute Kidney Injury with Bidirectional Graph Mamba
+
 
 ## Overview
 
-This is the code for our paper **{TITILE}**.
-{DESCRIPTION}.
+This is the code for our paper **Subphenotype-Aware Motality Prediction for Sepsis-Associated Acute Kidney Injury with Bidirectional Graph Mamba
+**.
 
 ## Requirements:
 
@@ -19,7 +20,7 @@ If you find this project useful and use it in your research, please consider cit
 
 ## Acknowledgement
 
-Our work utilizes two foundational frameworks: {URL}
+Our work utilizes two foundational frameworks: [Mamba](https://github.com/state-spaces/mamba) and [MIMIC Code Repository](https://github.com/MIT-LCP/mimic-code).
 
 ## Misc
 
