@@ -1,0 +1,20 @@
+input_paths:
+  vital_signs: 'Input/MIMICIV/raw/vital_signs.csv'
+  measurements: 'Input/MIMICIV/raw/measurements.csv'
+  medications: 'Input/MIMICIV/raw/medications.csv'
+  comorbidities: 'Input/MIMICIV/raw/comorbidities.csv'
+  outcomes: 'Input/MIMICIV/raw/outcomes.csv'
+  cohorts: 'Input/MIMICIV/raw/cohorts.csv'
+  raw: '/home/hwxu/Projects/Dataset/PKU/KDD/Input/MIMICIV/processed/time_series.csv'
+  cleaned: '/home/hwxu/Projects/Dataset/PKU/KDD/Input/MIMICIV/processed/time_series_cleaned.csv'
+
+output_paths:
+  time_series: 'Input/MIMICIV/processed/time_series.csv'
+  medications: 'Input/MIMICIV/processed/medications.csv'
+  comorbidities: 'Input/MIMICIV/processed/comorbidities.csv'
+  outcomes: 'Input/MIMICIV/processed/outcomes.csv'
+  statics: 'Input/MIMICIV/processed/statics.csv'
+  cohorts: 'Input/MIMICIV/processed/cohorts.csv'
+  interpolated: '/home/hwxu/Projects/Dataset/PKU/KDD/Input/MIMICIV/processed/interpolated_time_series.csv'
+
+hour_range: 1-48

@@ -1,0 +1,13 @@
+activation: "SIN"
+temporal_embedding_dim: 64
+static_embedding_dim: 8
+final_embedding_dim: 128
+dropout_rate: 0.1
+graph_mode: "weighted-cosine"
+graph_threshold: 0.75
+batch_size: 256
+static_file_path: "/home/hwxu/Projects/Dataset/PKU/KDD/Input/MIMICIV/processed/statics.csv"
+ts_file_path: "/home/hwxu/Projects/Dataset/PKU/KDD/Input/MIMICIV/processed/interpolated_time_series.csv"
+label_file_path: "/home/hwxu/Projects/Dataset/PKU/KDD/Input/MIMICIV/processed/labels.csv"
+emb4test_save_path: "/home/hwxu/Projects/Dataset/PKU/KDD/Output/precomputed/patient_embeddings.pt"
+graph4test_save_path: "/home/hwxu/Projects/Dataset/PKU/KDD/Output/precomputed/adjacency_matrix.pt"
