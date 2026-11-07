@@ -2,51 +2,57 @@
   "checkpoints": [
     {
       "file": "gbmn_seed41.pt",
-      "model": "GBMN",
+      "model": "GBMN (512-D Full Architecture)",
       "seed": 41,
-      "parameters": 165510,
-      "size_bytes": 704320,
-      "sha256": "1bbd726c4c4d108a98039a5a70ad61266dd8ad90812863d65ff44ff59d45f33e"
+      "parameters": 10332062,
+      "size_bytes": 41376548,
+      "size_mb": 39.46,
+      "sha256": "4436793076e420b27fbfe774ff9864c445ef0c70a0ad904682a0c163e109486c"
     },
     {
       "file": "gbmn_seed42.pt",
-      "model": "GBMN",
+      "model": "GBMN (512-D Full Architecture)",
       "seed": 42,
-      "parameters": 165510,
-      "size_bytes": 704320,
-      "sha256": "613950b53d240465dd2f62af5af9662a3af5d9454b42ba8708b3d1f2b7da6233"
+      "parameters": 10332062,
+      "size_bytes": 41376548,
+      "size_mb": 39.46,
+      "sha256": "1091472a0fbaa53dcba28ca005a8374a21d529b09a045f2fa88c107e61807349"
     },
     {
       "file": "gbmn_seed43.pt",
-      "model": "GBMN",
+      "model": "GBMN (512-D Full Architecture)",
       "seed": 43,
-      "parameters": 165510,
-      "size_bytes": 704320,
-      "sha256": "3e43537901f3ac0e9a94f52707f702427eeb0b03ba5065756281428d1cb87357"
+      "parameters": 10332062,
+      "size_bytes": 41376548,
+      "size_mb": 39.46,
+      "sha256": "f2b6292fe5f2c512afc45d9127d7ad80245d56a4275f4e900af9cefe9a5d24fb"
     },
     {
       "file": "gbmn_best.pt",
-      "model": "GBMN (Canonical Best Checkpoint)",
+      "model": "GBMN (Canonical Best 512-D Checkpoint)",
       "seed": 42,
-      "parameters": 165510,
-      "size_bytes": 704058,
-      "sha256": "8a82ac90b1859a38c1a09a5e28f69b9f30e3363832d5341d9463f1f5f04c7611"
+      "parameters": 10332062,
+      "size_bytes": 41376250,
+      "size_mb": 39.46,
+      "sha256": "c5d6d1a2dbaec0a6bd7a0617566024f63aeac5718e62e43813c87ffbe7ef516c"
     },
     {
       "file": "mlp_shap_surrogate.pt",
-      "model": "TwoLayerMLPSurrogate (SHAP Feature Attribution Classifier)",
+      "model": "TwoLayerMLPSurrogate (543->512->3 SHAP Classifier)",
       "seed": 42,
-      "parameters": 4739,
-      "size_bytes": 22646,
-      "sha256": "4e29176dcdbfef63a62ae92b0ca9decc3fc8ca219608b48b0c9dadfe7b192d16"
+      "parameters": 281091,
+      "size_bytes": 1128118,
+      "size_mb": 1.08,
+      "sha256": "94c50d1e6e375248e2f495e7ed17aaba4c4c9118a759392e399788f1c4c41e0f"
     },
     {
       "file": "baselines_seed42.pt",
-      "model": "All 9 Baselines (K-Means, LSTM, Transformer, 1D-CNN, GCN, GAT, GIN, NAGphormer, GPS)",
+      "model": "All 9 Baselines (512-D Full Architecture: K-Means, LSTM, Transformer, 1D-CNN, GCN, GAT, GIN, NAGphormer, GPS)",
       "seed": 42,
-      "parameters": 338739,
-      "size_bytes": 1417386,
-      "sha256": "764d0078cc6e1cf3318a27324cd81a41a948bf600cdb1bd243bd8ea93579ece7"
+      "parameters": 3861907,
+      "size_bytes": 15527524,
+      "size_mb": 14.81,
+      "sha256": "9b914fd3396ddb473e7cac3a4a8f193fb73d801d44959068f1616711039471e4"
     }
   ]
 }

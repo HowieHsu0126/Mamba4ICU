@@ -128,12 +128,12 @@ All trained model checkpoints are open-sourced under [`output/ckpts/`](output/ck
 
 | Checkpoint File | Model Description | Seed | Parameters | Size |
 | --- | --- | --- | --- | --- |
-| [`output/ckpts/gbmn_best.pt`](output/ckpts/gbmn_best.pt) | **GBMN** canonical pretrained model (GAT 3-layer + 2 BiMamba blocks) | 42 | 165,510 | 688 KB |
-| [`output/ckpts/gbmn_seed41.pt`](output/ckpts/gbmn_seed41.pt) | **GBMN** trained checkpoint (seed 41) | 41 | 165,510 | 688 KB |
-| [`output/ckpts/gbmn_seed42.pt`](output/ckpts/gbmn_seed42.pt) | **GBMN** trained checkpoint (seed 42) | 42 | 165,510 | 688 KB |
-| [`output/ckpts/gbmn_seed43.pt`](output/ckpts/gbmn_seed43.pt) | **GBMN** trained checkpoint (seed 43) | 43 | 165,510 | 688 KB |
-| [`output/ckpts/mlp_shap_surrogate.pt`](output/ckpts/mlp_shap_surrogate.pt) | **TwoLayerMLPSurrogate** for SHAP feature importance attribution | 42 | 4,611 | 23 KB |
-| [`output/ckpts/baselines_seed42.pt`](output/ckpts/baselines_seed42.pt) | Trained weights for all 9 baselines (`K-Means`, `LSTM`, `Transformer`, `1D-CNN`, `GCN`, `GAT`, `GIN`, `NAGphormer`, `GPS`) | 42 | 334,472 | 1.4 MB |
+| [`output/ckpts/gbmn_best.pt`](output/ckpts/gbmn_best.pt) | **GBMN** canonical 512-D pretrained model (3-layer GAT + 2 BiMamba blocks) | 42 | 10,332,062 | 39.46 MB |
+| [`output/ckpts/gbmn_seed41.pt`](output/ckpts/gbmn_seed41.pt) | **GBMN** 512-D trained checkpoint (seed 41) | 41 | 10,332,062 | 39.46 MB |
+| [`output/ckpts/gbmn_seed42.pt`](output/ckpts/gbmn_seed42.pt) | **GBMN** 512-D trained checkpoint (seed 42) | 42 | 10,332,062 | 39.46 MB |
+| [`output/ckpts/gbmn_seed43.pt`](output/ckpts/gbmn_seed43.pt) | **GBMN** 512-D trained checkpoint (seed 43) | 43 | 10,332,062 | 39.46 MB |
+| [`output/ckpts/mlp_shap_surrogate.pt`](output/ckpts/mlp_shap_surrogate.pt) | **TwoLayerMLPSurrogate** (543→512→3) for SHAP feature attribution | 42 | 281,091 | 1.08 MB |
+| [`output/ckpts/baselines_seed42.pt`](output/ckpts/baselines_seed42.pt) | Full-scale 512-D trained weights for all 9 baselines (`K-Means`, `LSTM`, `Transformer`, `1D-CNN`, `GCN`, `GAT`, `GIN`, `NAGphormer`, `GPS`) | 42 | 3,861,907 | 14.81 MB |
 
 ### Quick Start: Loading Pretrained GBMN Weights for Inference
 

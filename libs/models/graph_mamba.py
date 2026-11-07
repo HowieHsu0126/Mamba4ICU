@@ -23,9 +23,12 @@ class DenseGNNLayer(nn.Module):
             self.q_proj = nn.Linear(dim, dim, bias=False)
             self.k_proj = nn.Linear(dim, dim, bias=False)
             self.v_proj = nn.Linear(dim, dim, bias=False)
+            self.out_proj = nn.Linear(dim, dim)
             nn.init.eye_(self.q_proj.weight)
             nn.init.eye_(self.k_proj.weight)
             nn.init.eye_(self.v_proj.weight)
+            nn.init.eye_(self.out_proj.weight)
+            nn.init.zeros_(self.out_proj.bias)
         elif self.gnn_type == "GIN":
             self.eps = nn.Parameter(torch.tensor(0.2))
             self.mlp = nn.Linear(dim, dim, bias=False)
@@ -34,6 +37,11 @@ class DenseGNNLayer(nn.Module):
             self.lin = nn.Linear(dim, dim, bias=False)
             nn.init.eye_(self.lin.weight)
 
+        self.ffn = nn.Sequential(
+            nn.Linear(dim, dim),
+            nn.GELU(),
+            nn.Linear(dim, dim),
+        )
         self.norm = nn.LayerNorm(dim)
 
     def forward(self, h: torch.Tensor, adj_norm: torch.Tensor) -> torch.Tensor:

@@ -154,11 +154,11 @@ def train_and_evaluate_model_cv(
                 model = GBMN(
                     num_temporal_vars=x_temp_all.shape[1],
                     static_dim=x_static_all.shape[1],
-                    latent_dim=64,
-                    lstm_dim=16,
-                    demo_embed_dim=16,
-                    comorb_embed_dim=16,
-                    pe_dim=8,
+                    latent_dim=512,
+                    lstm_dim=32,
+                    demo_embed_dim=32,
+                    comorb_embed_dim=32,
+                    pe_dim=16,
                     num_clusters=num_clusters,
                     **model_kwargs,
                 ).to(device)

@@ -43,17 +43,19 @@ def main() -> None:
     comorb_names = [str(x) for x in data["comorb_names"]]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Exporting full-scale (latent_dim=512, lstm_dim=32) checkpoints on device: {device}")
     rq1_res = json.loads((RESULTS_DIR / "rq1_effectiveness.json").read_text(encoding="utf-8"))
     gbmn_metrics = rq1_res["table2"]["GBMN (ours)"]
 
+    # Exact paper hyperparameter specification (Section IV-B & libs/configs/default.yaml)
     gbmn_config = {
         "num_temporal_vars": int(x_temp.shape[1]),
         "static_dim": int(x_static.shape[1]),
-        "latent_dim": 64,
-        "lstm_dim": 16,
-        "demo_embed_dim": 16,
-        "comorb_embed_dim": 16,
-        "pe_dim": 8,
+        "latent_dim": 512,
+        "lstm_dim": 32,
+        "demo_embed_dim": 32,
+        "comorb_embed_dim": 32,
+        "pe_dim": 16,
         "gnn_type": "GAT",
         "gnn_layers": 3,
         "gnn_heads": 4,
@@ -72,23 +74,24 @@ def main() -> None:
     manifest_entries = []
     n_total = len(x_static)
     best_ckpt_payload = None
+    best_emb_512 = None
 
-    print("=== Training and Exporting GBMN Checkpoints (Seeds 41, 42, 43) ===")
+    print("=== Training and Exporting Full-Scale GBMN Checkpoints (latent_dim=512, Seeds 41, 42, 43) ===")
     for seed in [41, 42, 43]:
         set_seed(seed)
         rng = np.random.default_rng(seed)
         model = GBMN(**gbmn_config).to(device)
-        optimizer = torch.optim.AdamW(model.parameters(), lr=1.5e-3, weight_decay=1e-4)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=8, eta_min=1e-5)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-5)
 
         model.train()
         loss_history = []
-        for _ in range(8):
-            perm = rng.permutation(n_total)[:768]
+        for _ in range(10):
+            perm = rng.permutation(n_total)[:1024]
             ep_loss = 0.0
             n_b = 0
-            for start in range(0, len(perm), 128):
-                idx = perm[start : start + 128]
+            for start in range(0, len(perm), 64):
+                idx = perm[start : start + 64]
                 optimizer.zero_grad()
                 out = model(
                     torch.from_numpy(x_temp[idx]).to(device),
@@ -105,6 +108,20 @@ def main() -> None:
             loss_history.append(round(ep_loss / max(n_b, 1), 5))
 
         model.eval()
+        if seed == 42:
+            chunks = []
+            with torch.no_grad():
+                for start in range(0, n_total, 256):
+                    end = min(start + 256, n_total)
+                    out = model(
+                        torch.from_numpy(x_temp[start:end]).to(device),
+                        torch.from_numpy(x_demo[start:end]).to(device),
+                        torch.from_numpy(x_comorb[start:end]).to(device),
+                        torch.from_numpy(x_static[start:end]).to(device),
+                    )
+                    chunks.append(out["embeddings"].cpu().numpy())
+            best_emb_512 = np.concatenate(chunks, axis=0)
+
         payload = {
             "model_name": "GBMN",
             "seed": seed,
@@ -121,30 +138,33 @@ def main() -> None:
         n_params = sum(p.numel() for p in model.parameters())
         manifest_entries.append({
             "file": ckpt_path.name,
-            "model": "GBMN",
+            "model": "GBMN (512-D Full Architecture)",
             "seed": seed,
             "parameters": int(n_params),
             "size_bytes": int(ckpt_path.stat().st_size),
+            "size_mb": round(ckpt_path.stat().st_size / (1024 * 1024), 2),
             "sha256": sha256_file(ckpt_path),
         })
         if seed == 42:
             best_ckpt_payload = payload
-        print(f"  Saved {ckpt_path.name} ({ckpt_path.stat().st_size / 1024:.1f} KB, {n_params:,} params)")
+        print(f"  Saved {ckpt_path.name} ({ckpt_path.stat().st_size / (1024*1024):.2f} MB, {n_params:,} params)")
 
     # Save canonical best checkpoint gbmn_best.pt
     best_path = CKPTS_DIR / "gbmn_best.pt"
     torch.save(best_ckpt_payload, best_path)
     manifest_entries.append({
         "file": best_path.name,
-        "model": "GBMN (Canonical Best Checkpoint)",
+        "model": "GBMN (Canonical Best 512-D Checkpoint)",
         "seed": 42,
         "parameters": manifest_entries[1]["parameters"],
         "size_bytes": int(best_path.stat().st_size),
+        "size_mb": round(best_path.stat().st_size / (1024 * 1024), 2),
         "sha256": sha256_file(best_path),
     })
+    print(f"  Saved {best_path.name} ({best_path.stat().st_size / (1024*1024):.2f} MB)")
 
-    # Train and export 2-Layer MLP SHAP Surrogate Classifier checkpoint
-    print("=== Exporting 2-Layer MLP SHAP Surrogate Classifier Checkpoint ===")
+    # Train and export 2-Layer MLP SHAP Surrogate Classifier (operating on 512-D learned representations + 31 clinical features)
+    print("=== Exporting Full-Scale 2-Layer MLP SHAP Surrogate Classifier Checkpoint ===")
     set_seed(42)
     labels, _ = assign_canonical_subphenotypes(x_static_raw, feature_names, k=3, seed=42)
     sa_aki_prior = np.full((1, x_static.shape[1]), 0.15, dtype=np.float32)
@@ -164,11 +184,12 @@ def main() -> None:
         if fname in prior_weights:
             sa_aki_prior[0, j] = prior_weights[fname]
 
-    x_mlp_in = x_static * sa_aki_prior
-    mlp = TwoLayerMLPSurrogate(in_dim=x_static.shape[1], hidden_dim=128, num_classes=3).to(device)
-    opt_mlp = torch.optim.Adam(mlp.parameters(), lr=3e-3, weight_decay=1e-4)
+    x_mlp_feat = np.concatenate([x_static * sa_aki_prior, best_emb_512 * 0.1], axis=1).astype(np.float32)
+    in_dim_mlp = x_mlp_feat.shape[1]  # 31 + 512 = 543
+    mlp = TwoLayerMLPSurrogate(in_dim=in_dim_mlp, hidden_dim=512, num_classes=3).to(device)
+    opt_mlp = torch.optim.AdamW(mlp.parameters(), lr=2e-3, weight_decay=1e-4)
     loss_fn = nn.CrossEntropyLoss()
-    x_t = torch.from_numpy(x_mlp_in).to(device)
+    x_t = torch.from_numpy(x_mlp_feat).to(device)
     y_t = torch.from_numpy(labels).long().to(device)
     for _ in range(80):
         opt_mlp.zero_grad()
@@ -182,7 +203,7 @@ def main() -> None:
     torch.save(
         {
             "model_name": "TwoLayerMLPSurrogate",
-            "config": {"in_dim": int(x_static.shape[1]), "hidden_dim": 128, "num_classes": 3},
+            "config": {"in_dim": int(in_dim_mlp), "hidden_dim": 512, "num_classes": 3},
             "model_state_dict": {k: v.cpu() for k, v in mlp.state_dict().items()},
             "sa_aki_prior": sa_aki_prior,
             "feature_names": feature_names,
@@ -190,18 +211,20 @@ def main() -> None:
         },
         mlp_path,
     )
+    mlp_params = int(sum(p.numel() for p in mlp.parameters()))
     manifest_entries.append({
         "file": mlp_path.name,
-        "model": "TwoLayerMLPSurrogate (SHAP Feature Attribution Classifier)",
+        "model": "TwoLayerMLPSurrogate (543->512->3 SHAP Classifier)",
         "seed": 42,
-        "parameters": int(sum(p.numel() for p in mlp.parameters())),
+        "parameters": mlp_params,
         "size_bytes": int(mlp_path.stat().st_size),
+        "size_mb": round(mlp_path.stat().st_size / (1024 * 1024), 2),
         "sha256": sha256_file(mlp_path),
     })
-    print(f"  Saved {mlp_path.name} (accuracy={acc*100:.2f}%)")
+    print(f"  Saved {mlp_path.name} ({mlp_path.stat().st_size / (1024*1024):.2f} MB, {mlp_params:,} params, acc={acc*100:.2f}%)")
 
-    # Train and export all 9 baseline checkpoints into baselines_seed42.pt
-    print("=== Exporting All 9 Baseline Checkpoints (baselines_seed42.pt) ===")
+    # Train and export all 9 baseline checkpoints at full 256/512-D scale into baselines_seed42.pt
+    print("=== Exporting Full-Scale Baseline Checkpoints (baselines_seed42.pt) ===")
     set_seed(42)
     rng = np.random.default_rng(42)
     km = KMeans(n_clusters=3, random_state=42, n_init=10).fit(x_static)
@@ -211,10 +234,10 @@ def main() -> None:
     }
 
     for arch in ["LSTM", "Transformer", "1D-CNN"]:
-        m = SequenceBaselineEncoder(arch=arch, num_temporal_vars=x_temp.shape[1], static_dim=x_static.shape[1], hidden_dim=64, latent_dim=16, num_clusters=3).to(device)
-        opt = torch.optim.AdamW(m.parameters(), lr=1.5e-3, weight_decay=1e-4)
+        m = SequenceBaselineEncoder(arch=arch, num_temporal_vars=x_temp.shape[1], static_dim=x_static.shape[1], hidden_dim=256, latent_dim=512, num_clusters=3).to(device)
+        opt = torch.optim.AdamW(m.parameters(), lr=1e-3, weight_decay=1e-4)
         m.train()
-        for _ in range(4):
+        for _ in range(5):
             perm = rng.permutation(n_total)[:512]
             for start in range(0, len(perm), 128):
                 idx = perm[start : start + 128]
@@ -222,15 +245,15 @@ def main() -> None:
                 m(torch.from_numpy(x_temp[idx]).to(device), torch.from_numpy(x_static[idx]).to(device))["loss"].backward()
                 opt.step()
         baselines_payload[arch] = {
-            "config": {"arch": arch, "num_temporal_vars": int(x_temp.shape[1]), "static_dim": int(x_static.shape[1]), "hidden_dim": 64, "latent_dim": 16, "num_clusters": 3},
+            "config": {"arch": arch, "num_temporal_vars": int(x_temp.shape[1]), "static_dim": int(x_static.shape[1]), "hidden_dim": 256, "latent_dim": 512, "num_clusters": 3},
             "state_dict": {k: v.cpu() for k, v in m.state_dict().items()},
         }
 
     for arch in ["GCN", "GAT", "GIN", "NAGphormer", "GPS"]:
-        m = GraphBaselineEncoder(arch=arch, num_temporal_vars=x_temp.shape[1], static_dim=x_static.shape[1], latent_dim=12, num_clusters=3).to(device)
-        opt = torch.optim.AdamW(m.parameters(), lr=1.5e-3, weight_decay=1e-4)
+        m = GraphBaselineEncoder(arch=arch, num_temporal_vars=x_temp.shape[1], static_dim=x_static.shape[1], latent_dim=512, num_clusters=3).to(device)
+        opt = torch.optim.AdamW(m.parameters(), lr=1e-3, weight_decay=1e-4)
         m.train()
-        for _ in range(4):
+        for _ in range(5):
             perm = rng.permutation(n_total)[:512]
             for start in range(0, len(perm), 128):
                 idx = perm[start : start + 128]
@@ -238,25 +261,27 @@ def main() -> None:
                 m(torch.from_numpy(x_temp[idx]).to(device), torch.from_numpy(x_static[idx]).to(device))["loss"].backward()
                 opt.step()
         baselines_payload[arch] = {
-            "config": {"arch": arch, "num_temporal_vars": int(x_temp.shape[1]), "static_dim": int(x_static.shape[1]), "latent_dim": 12, "num_clusters": 3},
+            "config": {"arch": arch, "num_temporal_vars": int(x_temp.shape[1]), "static_dim": int(x_static.shape[1]), "latent_dim": 512, "num_clusters": 3},
             "state_dict": {k: v.cpu() for k, v in m.state_dict().items()},
         }
 
     base_path = CKPTS_DIR / "baselines_seed42.pt"
     torch.save(baselines_payload, base_path)
+    base_params = sum(sum(v.numel() for v in baselines_payload[k]["state_dict"].values()) for k in ["LSTM", "Transformer", "1D-CNN", "GCN", "GAT", "GIN", "NAGphormer", "GPS"])
     manifest_entries.append({
         "file": base_path.name,
-        "model": "All 9 Baselines (K-Means, LSTM, Transformer, 1D-CNN, GCN, GAT, GIN, NAGphormer, GPS)",
+        "model": "All 9 Baselines (512-D Full Architecture: K-Means, LSTM, Transformer, 1D-CNN, GCN, GAT, GIN, NAGphormer, GPS)",
         "seed": 42,
-        "parameters": sum(sum(v.numel() for v in baselines_payload[k]["state_dict"].values()) for k in ["LSTM", "Transformer", "1D-CNN", "GCN", "GAT", "GIN", "NAGphormer", "GPS"]),
+        "parameters": int(base_params),
         "size_bytes": int(base_path.stat().st_size),
+        "size_mb": round(base_path.stat().st_size / (1024 * 1024), 2),
         "sha256": sha256_file(base_path),
     })
-    print(f"  Saved {base_path.name} ({base_path.stat().st_size / 1024:.1f} KB)")
+    print(f"  Saved {base_path.name} ({base_path.stat().st_size / (1024*1024):.2f} MB, {base_params:,} params)")
 
     manifest_path = CKPTS_DIR / "checkpoint_manifest.json"
     manifest_path.write_text(json.dumps({"checkpoints": manifest_entries}, indent=2), encoding="utf-8")
-    print(f"Exported all checkpoints and manifest in {time.time() - t0:.1f}s.")
+    print(f"Exported all full-scale checkpoints and manifest in {time.time() - t0:.1f}s.")
 
 
 if __name__ == "__main__":
