@@ -75,7 +75,8 @@ $$
 ## Repository Structure
 
 ```text
-GBMN/
+Mamba4ICU/
+├── main.py                                   # Unified CLI entry point
 ├── libs/
 │   ├── configs/
 │   │   └── default.yaml                      # Default model, loss, and cohort hyperparameters
@@ -164,8 +165,8 @@ with torch.no_grad():
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/HowieHsu0126/GBMN.git
-   cd GBMN
+   git clone https://github.com/HowieHsu0126/Mamba4ICU.git
+   cd Mamba4ICU
    ```
 
 2. Create a Python 3.10+ environment and install dependencies:
