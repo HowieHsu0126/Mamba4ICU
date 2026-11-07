@@ -109,3 +109,41 @@ def test_tuned_gbmn_stages_and_outputs() -> None:
     ]:
         p = root / rel
         assert p.exists() and p.stat().st_size > 0, f"Missing output artifact: {rel}"
+
+
+def test_pretrained_checkpoints_loading() -> None:
+    root = Path(__file__).resolve().parents[2]
+    ckpt_path = root / "output" / "ckpts" / "gbmn_best.pt"
+    assert ckpt_path.exists() and ckpt_path.stat().st_size > 0
+    ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+    model = GBMN(**ckpt["config"])
+    model.load_state_dict(ckpt["model_state_dict"])
+    model.eval()
+
+    x_temp = torch.rand(8, 21, 8)
+    x_demo = torch.zeros(8, 2, dtype=torch.long)
+    x_comorb = torch.zeros(8, 7)
+    x_static = torch.rand(8, 31)
+    with torch.no_grad():
+        out = model(x_temp, x_demo, x_comorb, x_static)
+        assert out["probs"].shape == (8, 3)
+        assert out["subspace_embeddings"].shape == (8, 3)
+
+
+def test_postgresql_scripts_present() -> None:
+    root = Path(__file__).resolve().parents[2]
+    sql_dir = root / "libs" / "data" / "sql"
+    expected_sql = [
+        "01_stay_master.sql",
+        "02_kdigo_aki_labels.sql",
+        "03_sepsis3_and_sa_aki_cohort.sql",
+        "04_comorbidities_and_static.sql",
+        "05_vitals_hourly_48h.sql",
+        "06_labs_hourly_48h.sql",
+        "07_urine_output_hourly_48h.sql",
+    ]
+    for name in expected_sql:
+        p = sql_dir / name
+        assert p.exists() and p.stat().st_size > 100, f"Missing or empty SQL script: {name}"
+        content = p.read_text(encoding="utf-8").upper()
+        assert "SELECT" in content and "FROM" in content

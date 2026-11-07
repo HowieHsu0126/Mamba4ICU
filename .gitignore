@@ -8,7 +8,6 @@ Libs
 Output
 docs/
 output/REPRODUCTION_REPORT.md
-output/ckpts/
 output/logs/
 output/results/*.npz
 

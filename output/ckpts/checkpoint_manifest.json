@@ -1,0 +1,52 @@
+{
+  "checkpoints": [
+    {
+      "file": "gbmn_seed41.pt",
+      "model": "GBMN",
+      "seed": 41,
+      "parameters": 165510,
+      "size_bytes": 704320,
+      "sha256": "1bbd726c4c4d108a98039a5a70ad61266dd8ad90812863d65ff44ff59d45f33e"
+    },
+    {
+      "file": "gbmn_seed42.pt",
+      "model": "GBMN",
+      "seed": 42,
+      "parameters": 165510,
+      "size_bytes": 704320,
+      "sha256": "613950b53d240465dd2f62af5af9662a3af5d9454b42ba8708b3d1f2b7da6233"
+    },
+    {
+      "file": "gbmn_seed43.pt",
+      "model": "GBMN",
+      "seed": 43,
+      "parameters": 165510,
+      "size_bytes": 704320,
+      "sha256": "3e43537901f3ac0e9a94f52707f702427eeb0b03ba5065756281428d1cb87357"
+    },
+    {
+      "file": "gbmn_best.pt",
+      "model": "GBMN (Canonical Best Checkpoint)",
+      "seed": 42,
+      "parameters": 165510,
+      "size_bytes": 704058,
+      "sha256": "8a82ac90b1859a38c1a09a5e28f69b9f30e3363832d5341d9463f1f5f04c7611"
+    },
+    {
+      "file": "mlp_shap_surrogate.pt",
+      "model": "TwoLayerMLPSurrogate (SHAP Feature Attribution Classifier)",
+      "seed": 42,
+      "parameters": 4739,
+      "size_bytes": 22646,
+      "sha256": "4e29176dcdbfef63a62ae92b0ca9decc3fc8ca219608b48b0c9dadfe7b192d16"
+    },
+    {
+      "file": "baselines_seed42.pt",
+      "model": "All 9 Baselines (K-Means, LSTM, Transformer, 1D-CNN, GCN, GAT, GIN, NAGphormer, GPS)",
+      "seed": 42,
+      "parameters": 338739,
+      "size_bytes": 1417386,
+      "sha256": "764d0078cc6e1cf3318a27324cd81a41a948bf600cdb1bd243bd8ea93579ece7"
+    }
+  ]
+}
