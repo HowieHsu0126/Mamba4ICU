@@ -1,0 +1,285 @@
+{
+  "benchmark": [
+    {
+      "Category": "Baseline",
+      "Model": "K-Means (Raw Static)",
+      "DBI_mean": 2.4799654371673614,
+      "DBI_std": 0.031750521194212754,
+      "CHI_mean": 208.74325002034504,
+      "CHI_std": 5.792734624351485,
+      "Silhouette_mean": 0.11490982696413993,
+      "Silhouette_std": 0.003860434231145978,
+      "DBI": "2.480 \u00b1 0.032",
+      "CHI": "208.74 \u00b1 5.79",
+      "Silhouette": "0.115 \u00b1 0.004"
+    },
+    {
+      "Category": "Sequence Baseline",
+      "Model": "LSTM",
+      "DBI_mean": 1.6371345913972177,
+      "DBI_std": 0.027221049948420423,
+      "CHI_mean": 445.03826497395835,
+      "CHI_std": 10.46472717318929,
+      "Silhouette_mean": 0.20226633797089258,
+      "Silhouette_std": 0.007975798182759066,
+      "DBI": "1.637 \u00b1 0.027",
+      "CHI": "445.04 \u00b1 10.46",
+      "Silhouette": "0.202 \u00b1 0.008"
+    },
+    {
+      "Category": "Sequence Baseline",
+      "Model": "1D-CNN",
+      "DBI_mean": 1.786561220462551,
+      "DBI_std": 0.02526978163368643,
+      "CHI_mean": 450.37022908528644,
+      "CHI_std": 11.581576929848628,
+      "Silhouette_mean": 0.16919354001681008,
+      "Silhouette_std": 0.0062708428952817225,
+      "DBI": "1.787 \u00b1 0.025",
+      "CHI": "450.37 \u00b1 11.58",
+      "Silhouette": "0.169 \u00b1 0.006"
+    },
+    {
+      "Category": "Sequence Baseline",
+      "Model": "Transformer",
+      "DBI_mean": 1.8292834833983225,
+      "DBI_std": 0.023036945024553054,
+      "CHI_mean": 402.8908610026042,
+      "CHI_std": 10.679895159743799,
+      "Silhouette_mean": 0.16696820904811224,
+      "Silhouette_std": 0.007214352369304317,
+      "DBI": "1.829 \u00b1 0.023",
+      "CHI": "402.89 \u00b1 10.68",
+      "Silhouette": "0.167 \u00b1 0.007"
+    },
+    {
+      "Category": "Graph Baseline",
+      "Model": "GCN",
+      "DBI_mean": 1.7841533979997954,
+      "DBI_std": 0.03382333651306369,
+      "CHI_mean": 402.3388885498047,
+      "CHI_std": 14.181524851214755,
+      "Silhouette_mean": 0.16379024535417558,
+      "Silhouette_std": 0.007306547899501764,
+      "DBI": "1.784 \u00b1 0.034",
+      "CHI": "402.34 \u00b1 14.18",
+      "Silhouette": "0.164 \u00b1 0.007"
+    },
+    {
+      "Category": "Graph Baseline",
+      "Model": "GAT",
+      "DBI_mean": 1.7973894175065512,
+      "DBI_std": 0.023519339819567844,
+      "CHI_mean": 369.4228485107422,
+      "CHI_std": 8.556008895266428,
+      "Silhouette_mean": 0.16175063947836557,
+      "Silhouette_std": 0.007614141274092758,
+      "DBI": "1.797 \u00b1 0.024",
+      "CHI": "369.42 \u00b1 8.56",
+      "Silhouette": "0.162 \u00b1 0.008"
+    },
+    {
+      "Category": "Graph Baseline",
+      "Model": "GIN",
+      "DBI_mean": 1.8374932962785324,
+      "DBI_std": 0.02707721243365219,
+      "CHI_mean": 342.44619547526037,
+      "CHI_std": 9.615707958784613,
+      "Silhouette_mean": 0.1588972508907318,
+      "Silhouette_std": 0.00779899447711551,
+      "DBI": "1.837 \u00b1 0.027",
+      "CHI": "342.45 \u00b1 9.62",
+      "Silhouette": "0.159 \u00b1 0.008"
+    },
+    {
+      "Category": "Graph Baseline",
+      "Model": "NAGphormer",
+      "DBI_mean": 1.8021884357606277,
+      "DBI_std": 0.027924300551193996,
+      "CHI_mean": 365.576112874349,
+      "CHI_std": 7.743405758901424,
+      "Silhouette_mean": 0.16189865817626317,
+      "Silhouette_std": 0.007672385139945879,
+      "DBI": "1.802 \u00b1 0.028",
+      "CHI": "365.58 \u00b1 7.74",
+      "Silhouette": "0.162 \u00b1 0.008"
+    },
+    {
+      "Category": "Graph Baseline",
+      "Model": "GPS",
+      "DBI_mean": 1.7831230694975686,
+      "DBI_std": 0.025317095493601827,
+      "CHI_mean": 374.8134592692057,
+      "CHI_std": 8.823771044250904,
+      "Silhouette_mean": 0.16284284989039102,
+      "Silhouette_std": 0.009071855621102232,
+      "DBI": "1.783 \u00b1 0.025",
+      "CHI": "374.81 \u00b1 8.82",
+      "Silhouette": "0.163 \u00b1 0.009"
+    },
+    {
+      "Category": "GBMN & Ablations",
+      "Model": "GBMN Untuned (Stage 0)",
+      "DBI_mean": 2.0382282917166727,
+      "DBI_std": 0.03330500361992814,
+      "CHI_mean": 300.01299133300785,
+      "CHI_std": 7.812305807628743,
+      "Silhouette_mean": 0.1442020205159982,
+      "Silhouette_std": 0.006928375300833942,
+      "DBI": "2.038 \u00b1 0.033",
+      "CHI": "300.01 \u00b1 7.81",
+      "Silhouette": "0.144 \u00b1 0.007"
+    },
+    {
+      "Category": "GBMN & Ablations",
+      "Model": "Tuned GBMN w/o Comorbidity",
+      "DBI_mean": 0.9985987487131264,
+      "DBI_std": 0.011709009126836074,
+      "CHI_mean": 1328.1432006835937,
+      "CHI_std": 38.120781354654085,
+      "Silhouette_mean": 0.3408218046029409,
+      "Silhouette_std": 0.01058794136925092,
+      "DBI": "0.999 \u00b1 0.012",
+      "CHI": "1328.14 \u00b1 38.12",
+      "Silhouette": "0.341 \u00b1 0.011"
+    },
+    {
+      "Category": "GBMN & Ablations",
+      "Model": "Tuned GBMN w/o LGI",
+      "DBI_mean": 0.9137832378309887,
+      "DBI_std": 0.01440609789288721,
+      "CHI_mean": 1605.549609375,
+      "CHI_std": 40.30160087999587,
+      "Silhouette_mean": 0.36178047060966495,
+      "Silhouette_std": 0.012836954890231062,
+      "DBI": "0.914 \u00b1 0.014",
+      "CHI": "1605.55 \u00b1 40.30",
+      "Silhouette": "0.362 \u00b1 0.013"
+    },
+    {
+      "Category": "GBMN & Ablations",
+      "Model": "Tuned GBMN w/o GNNs",
+      "DBI_mean": 0.9523737247045082,
+      "DBI_std": 0.010872298339434665,
+      "CHI_mean": 1407.079569498698,
+      "CHI_std": 31.02798061386098,
+      "Silhouette_mean": 0.3538785556952158,
+      "Silhouette_std": 0.014100842019410675,
+      "DBI": "0.952 \u00b1 0.011",
+      "CHI": "1407.08 \u00b1 31.03",
+      "Silhouette": "0.354 \u00b1 0.014"
+    },
+    {
+      "Category": "GBMN & Ablations",
+      "Model": "Tuned GBMN w/o BiMamba",
+      "DBI_mean": 0.9939728690741702,
+      "DBI_std": 0.016719075070243818,
+      "CHI_mean": 1160.202559407552,
+      "CHI_std": 42.83460440800019,
+      "Silhouette_mean": 0.3341531197230021,
+      "Silhouette_std": 0.00974175199563633,
+      "DBI": "0.994 \u00b1 0.017",
+      "CHI": "1160.20 \u00b1 42.83",
+      "Silhouette": "0.334 \u00b1 0.010"
+    },
+    {
+      "Category": "GBMN & Ablations",
+      "Model": "Tuned GBMN Full (Stage 4 Optimal)",
+      "DBI_mean": 0.9203816221151208,
+      "DBI_std": 0.013417335207672682,
+      "CHI_mean": 1622.963895670573,
+      "CHI_std": 38.735348007672144,
+      "Silhouette_mean": 0.35995823542277017,
+      "Silhouette_std": 0.01230985811855527,
+      "DBI": "0.920 \u00b1 0.013",
+      "CHI": "1622.96 \u00b1 38.74",
+      "Silhouette": "0.360 \u00b1 0.012"
+    }
+  ],
+  "scalability": [
+    {
+      "Cohort_Size_N": 2000,
+      "Model": "NAGphormer",
+      "Inference_Time_ms": 64.83,
+      "Throughput_Patients_per_sec": 30848.1,
+      "Parameters": 32671
+    },
+    {
+      "Cohort_Size_N": 2000,
+      "Model": "GPS",
+      "Inference_Time_ms": 37.59,
+      "Throughput_Patients_per_sec": 53205.4,
+      "Parameters": 57503
+    },
+    {
+      "Cohort_Size_N": 2000,
+      "Model": "GBMN (BiMamba)",
+      "Inference_Time_ms": 453.93,
+      "Throughput_Patients_per_sec": 4405.9,
+      "Parameters": 184198
+    },
+    {
+      "Cohort_Size_N": 4000,
+      "Model": "NAGphormer",
+      "Inference_Time_ms": 35.46,
+      "Throughput_Patients_per_sec": 112795.2,
+      "Parameters": 32671
+    },
+    {
+      "Cohort_Size_N": 4000,
+      "Model": "GPS",
+      "Inference_Time_ms": 71.15,
+      "Throughput_Patients_per_sec": 56218.0,
+      "Parameters": 57503
+    },
+    {
+      "Cohort_Size_N": 4000,
+      "Model": "GBMN (BiMamba)",
+      "Inference_Time_ms": 896.9,
+      "Throughput_Patients_per_sec": 4459.8,
+      "Parameters": 184198
+    },
+    {
+      "Cohort_Size_N": 8000,
+      "Model": "NAGphormer",
+      "Inference_Time_ms": 69.18,
+      "Throughput_Patients_per_sec": 115636.0,
+      "Parameters": 32671
+    },
+    {
+      "Cohort_Size_N": 8000,
+      "Model": "GPS",
+      "Inference_Time_ms": 142.88,
+      "Throughput_Patients_per_sec": 55989.9,
+      "Parameters": 57503
+    },
+    {
+      "Cohort_Size_N": 8000,
+      "Model": "GBMN (BiMamba)",
+      "Inference_Time_ms": 1783.56,
+      "Throughput_Patients_per_sec": 4485.4,
+      "Parameters": 184198
+    },
+    {
+      "Cohort_Size_N": 16361,
+      "Model": "NAGphormer",
+      "Inference_Time_ms": 142.57,
+      "Throughput_Patients_per_sec": 114754.2,
+      "Parameters": 32671
+    },
+    {
+      "Cohort_Size_N": 16361,
+      "Model": "GPS",
+      "Inference_Time_ms": 292.71,
+      "Throughput_Patients_per_sec": 55894.1,
+      "Parameters": 57503
+    },
+    {
+      "Cohort_Size_N": 16361,
+      "Model": "GBMN (BiMamba)",
+      "Inference_Time_ms": 3580.29,
+      "Throughput_Patients_per_sec": 4569.7,
+      "Parameters": 184198
+    }
+  ]
+}

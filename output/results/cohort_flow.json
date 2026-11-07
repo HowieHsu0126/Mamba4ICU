@@ -1,0 +1,14 @@
+{
+  "database": "MIMIC-IV v2.1",
+  "raw_total_icu_stays": 73141,
+  "raw_sepsis_stays": 33495,
+  "raw_aki_stays": 46104,
+  "manuscript_sepsis_n": 33199,
+  "manuscript_aki_n": 34854,
+  "manuscript_sa_aki_initial_n": 20317,
+  "manuscript_excluded_los_lt_24h": 1523,
+  "manuscript_excluded_age_out_of_range": 1015,
+  "manuscript_excluded_eskd": 304,
+  "manuscript_excluded_missing_vitals": 1114,
+  "final_sa_aki_cohort_n": 16361
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "Stage": "Stage 0: Untuned GBMN (512/64-D Raw Readout, tau=1.0, No Compactness Loss)",
+    "DBI": "2.154 \u00b1 0.038",
+    "CHI": "289.35 \u00b1 8.24",
+    "Silhouette": "0.130 \u00b1 0.006",
+    "DBI_mean": 2.153600369224961,
+    "DBI_std": 0.038473010555028185,
+    "CHI_mean": 289.35199483235675,
+    "CHI_std": 8.238926862296537,
+    "Silhouette_mean": 0.12991579348842303,
+    "Silhouette_std": 0.005950756265672197
+  },
+  {
+    "Stage": "Stage 1: + Temperature-Scaled Softmax (tau=0.25) & L2 Feature Normalization",
+    "DBI": "1.558 \u00b1 0.018",
+    "CHI": "687.54 \u00b1 20.74",
+    "Silhouette": "0.219 \u00b1 0.008",
+    "DBI_mean": 1.5584896414323148,
+    "DBI_std": 0.01812028665520043,
+    "CHI_mean": 687.5407704671225,
+    "CHI_std": 20.740850150635534,
+    "Silhouette_mean": 0.21881787131230035,
+    "Silhouette_std": 0.00825294334220312
+  },
+  {
+    "Stage": "Stage 2: + Clinical Modality Gating & Tuned LGI Regularization (omega1=0.35, omega2=0.25, lambda=0.45)",
+    "DBI": "1.433 \u00b1 0.023",
+    "CHI": "827.70 \u00b1 27.61",
+    "Silhouette": "0.234 \u00b1 0.010",
+    "DBI_mean": 1.4333542297365465,
+    "DBI_std": 0.022609293016852976,
+    "CHI_mean": 827.69736328125,
+    "CHI_std": 27.610070126668905,
+    "Silhouette_mean": 0.23353782246510188,
+    "Silhouette_std": 0.009922428549425268
+  },
+  {
+    "Stage": "Stage 3: + Discriminative Prototype Bottleneck & Repulsion-Compactness Loss",
+    "DBI": "0.939 \u00b1 0.014",
+    "CHI": "1494.32 \u00b1 46.68",
+    "Silhouette": "0.361 \u00b1 0.013",
+    "DBI_mean": 0.938906923373611,
+    "DBI_std": 0.013856206134269288,
+    "CHI_mean": 1494.3222086588542,
+    "CHI_std": 46.676356984100316,
+    "Silhouette_mean": 0.36081860661506654,
+    "Silhouette_std": 0.012646357923684218
+  },
+  {
+    "Stage": "Stage 4: + Multi-View Subgraph Consistency & Cosine Warmup (Final Tuned GBMN)",
+    "DBI": "0.922 \u00b1 0.013",
+    "CHI": "1630.88 \u00b1 39.22",
+    "Silhouette": "0.361 \u00b1 0.012",
+    "DBI_mean": 0.9223107173333759,
+    "DBI_std": 0.012524164910648618,
+    "CHI_mean": 1630.8799438476562,
+    "CHI_std": 39.222659317186256,
+    "Silhouette_mean": 0.3607420633236567,
+    "Silhouette_std": 0.012373107121005035
+  },
+  {
+    "Stage": "Stage 5: + DEC Target Distribution KL Self-Training & Sharp Temperature (tau=0.06)",
+    "DBI": "1.001 \u00b1 0.014",
+    "CHI": "1058.38 \u00b1 24.55",
+    "Silhouette": "0.330 \u00b1 0.012",
+    "DBI_mean": 1.0010299747218703,
+    "DBI_std": 0.013881737188484122,
+    "CHI_mean": 1058.3828491210936,
+    "CHI_std": 24.554861262623344,
+    "Silhouette_mean": 0.32974916994571685,
+    "Silhouette_std": 0.012077120863838655
+  }
+]

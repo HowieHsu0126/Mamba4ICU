@@ -1,0 +1,30 @@
+# Local workspace and internal draft files
+CONTEXT.md
+TODO.md
+PROJECT_PREFIX
+AGENTS.md
+Input
+Libs
+Output
+docs/
+output/REPRODUCTION_REPORT.md
+output/ckpts/
+output/logs/
+output/results/*.npz
+
+# MIMIC-IV patient-level data (governed by PhysioNet Credentialed Health Data License)
+input/raw/*
+input/processed/*
+!input/raw/.gitkeep
+!input/processed/.gitkeep
+
+# Python / OS / IDE caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.vscode/
+.idea/
+.DS_Store
+*.log

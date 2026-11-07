@@ -1,0 +1,32 @@
+Clinical Feature,Value Range,"Cohort Details (N=16,361)",Manuscript Reference
+sex,n (%),"Male: 9,662 (59%), Female: 6,699 (41%)","Male: 5,320 (60), Female: 3,540 (40)"
+Age,Median (IQR),67 (56–77) years,68 (58–78) years
+Hypertension,n (%),"10,715 (65%)","4,420 (50)"
+Congestive heart failure,n (%),"6,085 (37%)","3,560 (41)"
+Diabetes mellitus,n (%),"5,880 (36%)","3,100 (35)"
+Liver disease,n (%),"3,819 (23%)","1,690 (19)"
+Peripheral vascular disease,n (%),"2,220 (14%)","1,270 (14)"
+HIV infection,n (%),155 (1%),160 (2)
+CKD,n (%),"4,680 (29%)","2,110 (24)"
+SAPS II Score,Median (IQR),34 (26–42),40 (30–50)
+Heart Rate,Median (IQR),86 (76–97) bpm,85 (75–100) bpm
+Respiratory Rate,Median (IQR),19 (17–22) breaths/min,18 (15–22) breaths/min
+Temperature,Median (IQR),36.8 (36.6–37.1) °C,36.8 (36.3–37.5) °C
+Systolic Blood Pressure,Median (IQR),114 (104–125) mmHg,115 (105–130) mmHg
+Diastolic Blood Pressure,Median (IQR),59 (53–66) mmHg,70 (60–80) mmHg
+Oxygen Saturation,Median (IQR),97 (96–98) %,95 (92–98) %
+White Blood Cell count,Median (IQR),11.3 (8.1–15.2) x10^9/L,9.0 (7.5–12.0) x10^9/L
+Blood Urea Nitrogen,Median (IQR),27 (16–46) mg/dL,21 (15–35) mg/dL
+Reduced Urine Output,n (%),"4,265 (26%)","1,850 (21)"
+Elevated Creatinine,n (%),"4,576 (28%)","2,210 (25)"
+Platelet count,Median (IQR),171 (113–242) x10^9/L,240 (180–310) x10^9/L
+Sodium,Median (IQR),138 (135–140) mmol/L,137 (133–140) mmol/L
+Potassium,Median (IQR),4.1 (3.8–4.5) mmol/L,4.1 (3.7–4.5) mmol/L
+Chloride,Median (IQR),104 (100–107) mmol/L,104 (100–107) mmol/L
+Bicarbonate,Median (IQR),23 (20–26) mmol/L,23 (21–26) mmol/L
+Phosphate,Median (IQR),3.6 (2.9–4.4) mg/dL,3.0 (2.5–3.8) mg/dL
+Hemoglobin,Median (IQR),9.6 (8.5–10.9) g/dL,10.5 (9.0–11.8) g/dL
+Lactate,Median (IQR),1.9 (1.5–2.5) mmol/L,1.7 (1.0–2.5) mmol/L
+Partial Thromboplastin Time,Median (IQR),33.3 (28.7–42.7) seconds,31.0 (28.0–40.0) seconds
+Anion Gap,Median (IQR),14.0 (12.0–16.8) mmol/L,13.2 (11.0–15.5) mmol/L
+Hematocrit,Median (IQR),28.9 (26.0–32.8) %,31.5 (27.5–35.0) %

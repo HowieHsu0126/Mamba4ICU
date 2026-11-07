@@ -1,0 +1,109 @@
+{
+  "subphenotype_counts": {
+    "1": 5890,
+    "2": 7690,
+    "3": 2781
+  },
+  "outcomes": [
+    {
+      "Subphenotype": "Subphenotype 1",
+      "n": 5890,
+      "Dialysis_pct": 3.2,
+      "Dialysis_fig_pct": 3.2,
+      "Mortality_pct": 17.0,
+      "Median_LOS_days": 6.4,
+      "P_Value": "P<0.001"
+    },
+    {
+      "Subphenotype": "Subphenotype 2",
+      "n": 7690,
+      "Dialysis_pct": 13.3,
+      "Dialysis_fig_pct": 13.3,
+      "Mortality_pct": 29.2,
+      "Median_LOS_days": 7.9,
+      "P_Value": "P<0.001"
+    },
+    {
+      "Subphenotype": "Subphenotype 3",
+      "n": 2781,
+      "Dialysis_pct": 47.4,
+      "Dialysis_fig_pct": 47.4,
+      "Mortality_pct": 58.7,
+      "Median_LOS_days": 9.6,
+      "P_Value": "P<0.001"
+    }
+  ],
+  "mlp_surrogate_accuracy": 0.921765148639679,
+  "top10_shap_features": [
+    {
+      "Rank": 1,
+      "Feature": "Age",
+      "Column": "age",
+      "SHAP_Value": 0.85,
+      "Raw_Shapley": 0.16644801665097475
+    },
+    {
+      "Rank": 2,
+      "Feature": "Blood Urea Nitrogen",
+      "Column": "bun",
+      "SHAP_Value": 0.83,
+      "Raw_Shapley": 0.1582486486683289
+    },
+    {
+      "Rank": 3,
+      "Feature": "Serum Creatinine",
+      "Column": "elevated_creatinine",
+      "SHAP_Value": 0.82,
+      "Raw_Shapley": 0.15710059615472952
+    },
+    {
+      "Rank": 4,
+      "Feature": "SAPS II Score",
+      "Column": "sapsii",
+      "SHAP_Value": 0.8,
+      "Raw_Shapley": 0.1507531674578786
+    },
+    {
+      "Rank": 5,
+      "Feature": "Hemoglobin",
+      "Column": "hemoglobin",
+      "SHAP_Value": 0.76,
+      "Raw_Shapley": 0.13583475615208349
+    },
+    {
+      "Rank": 6,
+      "Feature": "Urine Output",
+      "Column": "reduced_urine_output",
+      "SHAP_Value": 0.73,
+      "Raw_Shapley": 0.1266497556741039
+    },
+    {
+      "Rank": 7,
+      "Feature": "Lactate",
+      "Column": "lactate",
+      "SHAP_Value": 0.64,
+      "Raw_Shapley": 0.09820727072656155
+    },
+    {
+      "Rank": 8,
+      "Feature": "Oxygen Saturation",
+      "Column": "spo2",
+      "SHAP_Value": 0.59,
+      "Raw_Shapley": 0.08078280075763662
+    },
+    {
+      "Rank": 9,
+      "Feature": "Heart Rate",
+      "Column": "heart_rate",
+      "SHAP_Value": 0.54,
+      "Raw_Shapley": 0.06359683497187991
+    },
+    {
+      "Rank": 10,
+      "Feature": "White Blood Cell count",
+      "Column": "wbc",
+      "SHAP_Value": 0.46,
+      "Raw_Shapley": 0.038275543289879956
+    }
+  ]
+}

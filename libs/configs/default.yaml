@@ -1,0 +1,60 @@
+project:
+  name: gbmn_sa_aki
+  prefix: JbhiMmb
+  seeds: [41, 42, 43]
+  primary_seed: 42
+  n_folds: 10
+
+paths:
+  raw_dir: input/raw
+  processed_dir: input/processed
+  tables_dir: output/tables
+  figures_dir: output/figures
+  results_dir: output/results
+  logs_dir: output/logs
+  ckpts_dir: output/ckpts
+
+cohort:
+  target_sepsis_count: 33199
+  target_aki_count: 34854
+  target_sa_aki_initial: 20317
+  target_excl_los_lt_24h: 1523
+  target_excl_age: 1015
+  target_excl_eskd: 304
+  target_excl_missing_vitals: 1114
+  target_final_cohort: 16361
+  age_min: 18
+  age_max: 89
+  age_bins: [18, 30, 40, 50, 60, 89]
+  observation_hours: 48
+  min_feature_presence_ratio: 0.70
+  knn_neighbors: 5
+
+model:
+  latent_dim: 512
+  lstm_dim: 32
+  demographic_embed_dim: 32
+  comorbidity_embed_dim: 32
+  pe_dim: 16
+  gnn_type: GAT
+  gnn_layers: 3
+  gnn_heads: 4
+  mamba_blocks: 2
+  mamba_state_dim: 16
+  mamba_conv_kernel: 3
+  num_walks: 10
+  walk_length: 2
+  num_clusters: 3
+  precomputed_graph_threshold: 0.65
+
+loss:
+  omega_1: 0.35
+  omega_2: 0.25
+  lambda_g: 0.45
+
+training:
+  batch_size: 64
+  epochs: 100
+  lr: 0.001
+  min_lr: 0.00001
+  weight_decay: 0.0001

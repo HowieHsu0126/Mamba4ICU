@@ -1,0 +1,32 @@
+Clinical Feature,"Subphenotype 1 (n=5,890)","Subphenotype 2 (n=7,690)","Subphenotype 3 (n=2,781)",Effect Size (Cramér's V / Eta-squared),Qualitative Effect Size,P Value,Raw_Effect_Size,Raw_P_Value
+"Male, n (%)","3,571 (61%)","4,409 (57%)","1,682 (60%)",Cramér's V: 0.033,S,P<0.001,0.033,0.00013724557361810866
+"Age, median (IQR)",70 (61–79),63 (52–73),69 (58–78) years,Eta-squared: 0.048,S,P<0.001,0.0478,9.950482909674904e-175
+"Hypertension, n (%)","4,425 (75%)","4,458 (58%)","1,832 (66%)",Cramér's V: 0.163,S,P<0.001,0.163,4.2719605078404253e-95
+"Congestive heart failure, n (%)","2,312 (39%)","2,541 (33%)","1,232 (44%)",Cramér's V: 0.088,S,P<0.001,0.0883,2.0170171233537558e-28
+"Diabetes mellitus, n (%)","1,837 (31%)","2,983 (39%)","1,060 (38%)",Cramér's V: 0.074,S,P<0.001,0.0744,2.0989445560719894e-20
+"Liver disease, n (%)",325 (6%),"2,331 (30%)","1,163 (42%)",Cramér's V: 0.330,M,P<0.001,0.3303,0.0
+"Peripheral vascular disease, n (%)",870 (15%),961 (12%),389 (14%),Cramér's V: 0.030,S,P<0.001,0.0305,0.000498326562095357
+"HIV infection, n (%)",14 (0%),116 (2%),25 (1%),Cramér's V: 0.059,S,P<0.001,0.0593,3.299340025399376e-13
+"CKD, n (%)",941 (16%),"2,492 (32%)","1,247 (45%)",Cramér's V: 0.231,S,P<0.001,0.231,2.3345509085773393e-190
+"SAPS II Score, median (IQR)",29 (22–35),34 (27–41),50 (43–57),Eta-squared: 0.347,L,P<0.001,0.3471,0.0
+"Heart Rate, median (IQR)",83 (74–93),88 (78–99),90 (78–102) bpm,Eta-squared: 0.029,S,P<0.001,0.0294,9.848452333706066e-107
+"Respiratory Rate, median (IQR)",19 (17–22),19 (16–22),20 (17–24) breaths/min,Eta-squared: 0.013,S,P<0.001,0.0131,2.0307904733825538e-47
+"Temperature, median (IQR)",36.8 (36.6–37.1),36.8 (36.6–37.1),36.7 (36.4–36.9) °C,Eta-squared: 0.020,S,P<0.001,0.0197,5.111410686583289e-83
+"Systolic Blood Pressure, median (IQR)",116 (107–127),114 (104–126),107 (100–118) mmHg,Eta-squared: 0.031,S,P<0.001,0.0309,1.3522357188261432e-127
+"Diastolic Blood Pressure, median (IQR)",60 (54–67),60 (54–67),56 (50–63) mmHg,Eta-squared: 0.020,S,P<0.001,0.0203,2.3953842762859377e-77
+"Oxygen Saturation, median (IQR)",97 (96–98),97 (96–98),97 (95–98) %,Eta-squared: 0.009,S,P<0.001,0.0089,1.2722838685492795e-32
+"White Blood Cell count, median (IQR)",11.3 (8.7–14.4),10.8 (7.4–14.9),13.3 (9.0–19.2) x10^9/L,Eta-squared: 0.035,S,P<0.001,0.0349,8.538934851986416e-127
+"Blood Urea Nitrogen, median (IQR)",19 (14–27),29 (18–45),58 (40–83) mg/dL,Eta-squared: 0.316,L,P<0.001,0.3161,0.0
+"Urine Output, n (%)","5,532 (94%)","5,857 (76%)",707 (25%),Cramér's V: 0.532,L,P<0.001,0.5324,0.0
+"Creatinine, n (%)",99 (2%),"2,108 (27%)","2,369 (85%)",Cramér's V: 0.632,L,P<0.001,0.6323,0.0
+"Platelet count, median (IQR)",196 (146–272),154 (98–224),147 (82–225) x10^9/L,Eta-squared: 0.052,S,P<0.001,0.0521,8.669131061254942e-227
+"Sodium, median (IQR)",138 (136–140),138 (135–140),137 (133–140) mmol/L,Eta-squared: 0.010,S,P<0.001,0.0098,1.3901150819962264e-35
+"Potassium, median (IQR)",4.1 (3.8–4.3),4.1 (3.8–4.4),4.4 (4.0–4.9) mmol/L,Eta-squared: 0.056,S,P<0.001,0.0556,7.363471226665236e-204
+"Chloride, median (IQR)",104 (101–107),104 (100–108),101 (96–106) mmol/L,Eta-squared: 0.030,S,P<0.001,0.0301,2.194512296471112e-109
+"Bicarbonate, median (IQR)",24 (22–27),23 (20–25),20 (16–22) mmol/L,Eta-squared: 0.149,L,P<0.001,0.1495,0.0
+"Phosphate, median (IQR)",3.2 (2.8–3.7),3.6 (2.9–4.3),5.2 (4.2–6.4) mg/dL,Eta-squared: 0.299,L,P<0.001,0.2994,0.0
+"Hemoglobin, median (IQR)",10.6 (9.4–11.9),9.1 (8.1–10.1),9.1 (8.1–10.2) g/dL,Eta-squared: 0.158,L,P<0.001,0.1576,0.0
+"Lactate, median (IQR)",1.9 (1.5–2.3),1.9 (1.4–2.5),2.2 (1.5–3.8) mmol/L,Eta-squared: 0.102,M,P<0.001,0.102,0.0
+"Partial Thromboplastin Time, median (IQR)",31.3 (27.9–37.8),33.5 (28.9–42.3),39.8 (31.6–55.0) seconds,Eta-squared: 0.054,S,P<0.001,0.0535,4.85102146609857e-196
+"Anion Gap, median (IQR)",13.0 (11.0–15.0),14.0 (12.0–16.0),19.0 (16.5–22.0) mmol/L,Eta-squared: 0.338,L,P<0.001,0.338,0.0
+"Hematocrit, median (IQR)",31.7 (28.6–35.9),27.5 (25.1–30.4),27.7 (25.0–31.1) %,Eta-squared: 0.158,L,P<0.001,0.1578,0.0

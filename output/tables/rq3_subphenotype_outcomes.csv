@@ -1,0 +1,4 @@
+Subphenotype,n,Dialysis_pct,Dialysis_fig_pct,Mortality_pct,Median_LOS_days,P_Value
+Subphenotype 1,5890,3.2,3.2,17.0,6.4,P<0.001
+Subphenotype 2,7690,13.3,13.3,29.2,7.9,P<0.001
+Subphenotype 3,2781,47.4,47.4,58.7,9.6,P<0.001
