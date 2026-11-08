@@ -1,14 +1,15 @@
 -- =============================================================================
 -- 01_stay_master.sql
 -- Extracts ICU stay master table from MIMIC-IV (mimiciv_icu & mimiciv_hosp),
--- computing admission age, length of stay, mortality flags, and stay rank.
+-- computing admission age, exact fractional admission age, length of stay,
+-- mortality flags, and stay rank.
 -- =============================================================================
 
-CREATE SCHEMA IF NOT EXISTS sa_aki_stage;
+CREATE SCHEMA IF NOT EXISTS __STAGE_SCHEMA__;
 
-DROP TABLE IF EXISTS sa_aki_stage.stay_master CASCADE;
+DROP TABLE IF EXISTS __STAGE_SCHEMA__.stay_master CASCADE;
 
-CREATE TABLE sa_aki_stage.stay_master AS
+CREATE TABLE __STAGE_SCHEMA__.stay_master AS
 WITH base_stays AS (
     SELECT
         icu.stay_id AS icu_stay_id,
@@ -31,6 +32,7 @@ WITH base_stays AS (
         pat.anchor_age,
         pat.anchor_year,
         (pat.anchor_age + EXTRACT(YEAR FROM adm.admittime)::int - pat.anchor_year) AS admit_age,
+        (pat.anchor_age + EXTRACT(EPOCH FROM (adm.admittime - MAKE_TIMESTAMP(pat.anchor_year, 1, 1, 0, 0, 0))) / 31557600.0) AS exact_admit_age,
         pat.dod,
         ROW_NUMBER() OVER (
             PARTITION BY icu.subject_id
@@ -47,7 +49,7 @@ SELECT
     (first_stay_rank = 1) AS is_first_stay
 FROM base_stays;
 
-CREATE INDEX idx_sa_aki_stay_master_stay ON sa_aki_stage.stay_master (icu_stay_id);
-CREATE INDEX idx_sa_aki_stay_master_patient ON sa_aki_stage.stay_master (patient_id);
-CREATE INDEX idx_sa_aki_stay_master_hadm ON sa_aki_stage.stay_master (encounter_id);
-ANALYZE sa_aki_stage.stay_master;
+CREATE INDEX idx_sa_aki_stay_master_stay ON __STAGE_SCHEMA__.stay_master (icu_stay_id);
+CREATE INDEX idx_sa_aki_stay_master_patient ON __STAGE_SCHEMA__.stay_master (patient_id);
+CREATE INDEX idx_sa_aki_stay_master_hadm ON __STAGE_SCHEMA__.stay_master (encounter_id);
+ANALYZE __STAGE_SCHEMA__.stay_master;

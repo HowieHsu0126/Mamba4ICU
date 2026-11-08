@@ -1,8 +1,8 @@
 {
   "database": "MIMIC-IV v2.1",
   "raw_total_icu_stays": 73141,
-  "raw_sepsis_stays": 33495,
-  "raw_aki_stays": 46104,
+  "raw_sepsis_stays": 33199,
+  "raw_aki_stays": 34854,
   "manuscript_sepsis_n": 33199,
   "manuscript_aki_n": 34854,
   "manuscript_sa_aki_initial_n": 20317,

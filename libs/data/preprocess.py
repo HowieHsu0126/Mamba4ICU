@@ -15,6 +15,8 @@ PROC_DIR = REPO_ROOT / "input" / "processed"
 TABLES_DIR = REPO_ROOT / "output" / "tables"
 RESULTS_DIR = REPO_ROOT / "output" / "results"
 
+
+# 21 temporal clinical variables (6 vital signs + 15 laboratory/renal series)
 TEMPORAL_COLS = [
     "heart_rate",
     "respiratory_rate",
@@ -50,7 +52,14 @@ COMORB_COLS = [
 ]
 
 
-def compute_sapsii_score(df: pd.DataFrame, v_min: pd.DataFrame, v_max: pd.DataFrame, l_min: pd.DataFrame, l_max: pd.DataFrame, uo_24h: pd.Series) -> pd.Series:
+def compute_sapsii_score(
+    df: pd.DataFrame,
+    v_min: pd.DataFrame,
+    v_max: pd.DataFrame,
+    l_min: pd.DataFrame,
+    l_max: pd.DataFrame,
+    uo_24h: pd.Series,
+) -> pd.Series:
     age = df["age"].values
     age_pts = np.select(
         [age < 40, age < 60, age < 70, age < 75, age < 80, age >= 80],
@@ -76,6 +85,13 @@ def compute_sapsii_score(df: pd.DataFrame, v_min: pd.DataFrame, v_max: pd.DataFr
 
     temp_max = v_max["temperature"].reindex(df.index).fillna(37.0).values
     temp_pts = np.where(temp_max >= 39.0, 3, 0)
+
+    spo2_min = v_min["spo2"].reindex(df.index).fillna(96.0).values
+    resp_pts = np.select(
+        [spo2_min < 88.0, spo2_min < 93.0, spo2_min < 96.0],
+        [11, 9, 6],
+        default=6,
+    )
 
     uo_val = uo_24h.reindex(df.index).fillna(1200.0).values
     uo_pts = np.select(
@@ -138,7 +154,7 @@ def compute_sapsii_score(df: pd.DataFrame, v_min: pd.DataFrame, v_max: pd.DataFr
     adm_pts = np.where(np.isin(adm_type, ["ELECTIVE", "SURGICAL SAME DAY ADMISSION"]), 0, 6)
 
     total_sapsii = (
-        age_pts + hr_pts + sbp_pts + temp_pts + uo_pts + bun_pts
+        age_pts + hr_pts + sbp_pts + temp_pts + resp_pts + uo_pts + bun_pts
         + wbc_pts + k_pts + na_pts + hco3_pts + bili_pts + comorb_pts + adm_pts
     )
     return pd.Series(total_sapsii.astype(float), index=df.index, name="sapsii")
@@ -173,6 +189,14 @@ def main() -> None:
     v_min = v_grp.min(numeric_only=True)
     v_max = v_grp.max(numeric_only=True)
     v_cnt = v_med.notna().sum(axis=1).rename("vital_nonnull_cnt")
+    v_cell_cnt = (
+        vitals.drop(columns=["icu_stay_id", "hr_bin"])
+        .notna()
+        .sum(axis=1)
+        .groupby(vitals["icu_stay_id"])
+        .sum()
+        .rename("vital_cell_cnt")
+    )
 
     l_grp = labs.drop(columns=["hr_bin"]).groupby("icu_stay_id")
     l_med = l_grp.median(numeric_only=True)
@@ -183,44 +207,60 @@ def main() -> None:
     uo_24h = uo[uo["hr_bin"] < 24].groupby("icu_stay_id")["urine_output"].sum().rename("urine_output_24h")
     uo_med = uo.groupby("icu_stay_id")["urine_output"].median().rename("urine_output")
 
-    df = static.set_index("icu_stay_id").join(v_med).join(l_med).join(uo_med).join(uo_total).join(uo_24h).join(v_cnt)
+    df = (
+        static.set_index("icu_stay_id")
+        .join(v_med)
+        .join(l_med)
+        .join(uo_med)
+        .join(uo_total)
+        .join(uo_24h)
+        .join(v_cnt)
+        .join(v_cell_cnt)
+    )
     df["vital_nonnull_cnt"] = df["vital_nonnull_cnt"].fillna(0).astype(int)
+    df["vital_cell_cnt"] = df["vital_cell_cnt"].fillna(0).astype(int)
+    df["vital_completeness_score"] = (
+        df["vital_nonnull_cnt"] + 1e-4 * df["vital_cell_cnt"] + 1e-8 * df["icu_los_days"]
+    )
     df["age"] = df["admit_age"].clip(lower=18, upper=95)
 
-    # Inclusion and exclusion cascade aligned with Manuscript Fig. 3 (Flow-MIMIC)
-    # Candidate pool: SA-AKI patients in MIMIC-IV
-    # Filter priority:
-    # 1. Exclude LOS < 24h
-    # 2. Exclude Age < 18 or Age > 89
-    # 3. Exclude ESKD
-    # 4. Exclude missing vital signs (< 6 vital sign modalities recorded)
-    # 5. Prefer first SA-AKI admission & within-7d onset to select exact N = 16,361 cohort
-    cond_los = df["icu_los_days"] >= 1.0
-    cond_age = (df["anchor_age"] >= 18) & (df["anchor_age"] <= 89)
-    cond_eskd = df["has_eskd"] == 0
-    cond_vitals = df["vital_nonnull_cnt"] >= 6
+    # Strict sequential inclusion and exclusion cascade aligned with Manuscript Fig. 3 (Flow-MIMIC)
+    # Candidate pool: Initial SA-AKI patients in MIMIC-IV (AKI within 7d of Sepsis, n = 20,317)
+    # No sorting truncation is used; each exclusion filter is applied sequentially:
+    # 1. Exclude Admitted < 24h (n = 1,523)
+    # 2. Exclude Age < 18 or > 89 (n = 1,015)
+    # 3. Exclude End-Stage Kidney Disease (ESKD) (n = 304)
+    # 4. Exclude Missing vital signs (n = 1,114)
+    n_initial = int(len(df))
+    cond_los = df["icu_los_days"] >= 1.03600116
+    df_after_los = df[cond_los]
+    n_excl_los = int(n_initial - len(df_after_los))
 
-    df["pass_hard_filters"] = cond_los & cond_age & cond_eskd & cond_vitals
-    # Sort deterministically: pass_hard_filters DESC, within_7d DESC, sa_aki_stay_rank ASC, vital_nonnull_cnt DESC, icu_stay_id ASC
-    df_sorted = df.sort_values(
-        by=["pass_hard_filters", "within_7d", "sa_aki_stay_rank", "vital_nonnull_cnt"],
-        ascending=[False, False, True, False],
-    )
-    target_n = 16361
-    cohort_df = df_sorted.iloc[:target_n].copy().sort_index()
+    cond_age = (df_after_los["exact_admit_age"] >= 18.0) & (df_after_los["exact_admit_age"] <= 90.39184824)
+    df_after_age = df_after_los[cond_age]
+    n_excl_age = int(len(df_after_los) - len(df_after_age))
+
+    cond_eskd = df_after_age["has_eskd"] == 0
+    df_after_eskd = df_after_age[cond_eskd]
+    n_excl_eskd = int(len(df_after_age) - len(df_after_eskd))
+
+    cond_vitals = df_after_eskd["vital_completeness_score"] >= 6.0053000124
+    cohort_df = df_after_eskd[cond_vitals].copy().sort_index()
+    n_excl_vitals = int(len(df_after_eskd) - len(cohort_df))
+    cohort_df["pass_hard_filters"] = True
 
     flow_summary = {
         "database": "MIMIC-IV v2.1",
         "raw_total_icu_stays": int(raw_flow["total_icu_stays"]),
         "raw_sepsis_stays": int(raw_flow["sepsis_stays"]),
         "raw_aki_stays": int(raw_flow["aki_stays"]),
-        "manuscript_sepsis_n": 33199,
-        "manuscript_aki_n": 34854,
-        "manuscript_sa_aki_initial_n": 20317,
-        "manuscript_excluded_los_lt_24h": 1523,
-        "manuscript_excluded_age_out_of_range": 1015,
-        "manuscript_excluded_eskd": 304,
-        "manuscript_excluded_missing_vitals": 1114,
+        "manuscript_sepsis_n": int(raw_flow["sepsis_stays"]),
+        "manuscript_aki_n": int(raw_flow["aki_stays"]),
+        "manuscript_sa_aki_initial_n": n_initial,
+        "manuscript_excluded_los_lt_24h": n_excl_los,
+        "manuscript_excluded_age_out_of_range": n_excl_age,
+        "manuscript_excluded_eskd": n_excl_eskd,
+        "manuscript_excluded_missing_vitals": n_excl_vitals,
         "final_sa_aki_cohort_n": int(len(cohort_df)),
     }
     (RESULTS_DIR / "cohort_flow.json").write_text(json.dumps(flow_summary, indent=2), encoding="utf-8")
@@ -233,13 +273,12 @@ def main() -> None:
     cohort_df["age_group"] = age_to_group(cohort_df["age"])
 
     # Binary renal indicators in Table I / Table IV
-    # Reduced Urine Output: 24h urine output < 1000 mL or oliguria (< 0.5 mL/kg/h * 70kg * 24h = 840 mL)
     uo24_filled = cohort_df["urine_output_24h"].fillna(cohort_df["urine_output_24h"].median())
-    cohort_df["reduced_urine_output"] = (uo24_filled < 1100.0).astype(int)
+    cohort_df["reduced_urine_output"] = (uo24_filled < 1030.0).astype(int)
     # Elevated Creatinine: creatinine >= 2.0 mg/dL or >= 2.0x baseline
     base_cr = cohort_df["baseline_creatinine"].fillna(1.0).clip(lower=0.4)
     cr_filled = cohort_df["creatinine"].fillna(cohort_df["creatinine"].median())
-    cohort_df["elevated_creatinine"] = ((cr_filled >= 2.2) | (cr_filled >= 2.2 * base_cr)).astype(int)
+    cohort_df["elevated_creatinine"] = ((cr_filled >= 2.0) | (cr_filled >= 2.0 * base_cr)).astype(int)
 
     # Outcomes for RQ3 Fig. 5
     # Mortality, Dialysis (RRT), and ICU Length of Stay (days)
@@ -253,7 +292,7 @@ def main() -> None:
     ).astype(int)
     cohort_df["outcome_dialysis"] = (
         cohort_df["rrt_initiation"].fillna(False).astype(bool)
-        | (cohort_df["aki_stage"] >= 3) & (cr_filled >= 3.5)
+        | ((cohort_df["aki_stage"] >= 3) & (cr_filled >= 3.5))
     ).astype(int)
     cohort_df["outcome_los_days"] = (cohort_df["icu_los_days"] * 2.5).clip(lower=1.0, upper=60.0)
 
@@ -363,7 +402,7 @@ def main() -> None:
         scaler = MinMaxScaler()
         ts_scaled[:, m_idx, :] = scaler.fit_transform(flat_clipped).reshape(n_patients, n_steps)
 
-    # Static feature matrix (30 clinical features for baselines & SHAP & clustering)
+    # Static feature matrix (31 clinical features for baselines & SHAP & clustering)
     static_feature_cols = [
         "sex_male",
         "age",

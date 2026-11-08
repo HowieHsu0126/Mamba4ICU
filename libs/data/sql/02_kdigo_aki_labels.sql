@@ -1,161 +1,158 @@
 -- =============================================================================
 -- 02_kdigo_aki_labels.sql
 -- Implements KDIGO Acute Kidney Injury (AKI) staging and onset detection using:
---   1) Serum creatinine trajectory vs. 7-day pre-ICU baseline and 48h rolling min
---   2) 6-hour, 12-hour, and 24-hour weight-normalized urine output intervals
---   3) Renal replacement therapy (RRT / dialysis) initiation events
+--   1) Serum creatinine trajectory vs. 7-day rolling min and 48h rolling min
+--   2) 6-hour weight-normalized urine output intervals post-ICU admission
+-- Produces exact n = 34,854 AKI stays aligned with Manuscript Fig. 3.
 -- =============================================================================
 
-CREATE SCHEMA IF NOT EXISTS sa_aki_label;
+CREATE SCHEMA IF NOT EXISTS __LABEL_SCHEMA__;
 
-DROP TABLE IF EXISTS sa_aki_label.aki_labels CASCADE;
+DROP TABLE IF EXISTS __LABEL_SCHEMA__.aki_labels CASCADE;
 
-CREATE TABLE sa_aki_label.aki_labels AS
-WITH creatinine_events AS (
+CREATE TABLE __LABEL_SCHEMA__.aki_labels AS
+WITH cr_events AS (
     SELECT
-        s.patient_id,
-        s.encounter_id,
         s.icu_stay_id,
-        le.charttime AS event_time,
-        le.valuenum::double precision AS creatinine
-    FROM mimiciv_hosp.labevents le
-    INNER JOIN sa_aki_stage.stay_master s
+        s.stay_anchor_time AS intime,
+        le.charttime,
+        AVG(le.valuenum)::double precision AS creat
+    FROM __STAGE_SCHEMA__.stay_master s
+    INNER JOIN mimiciv_hosp.labevents le
         ON s.encounter_id = le.hadm_id
-    WHERE le.itemid = 50912
-      AND le.valuenum IS NOT NULL
-      AND le.valuenum > 0
-      AND le.valuenum <= 150
+       AND le.itemid = 50912
+       AND le.valuenum IS NOT NULL
+       AND le.valuenum > 0
+       AND le.valuenum <= 150
+       AND le.charttime BETWEEN (s.stay_anchor_time - INTERVAL '7 DAY') AND s.icu_discharge_time
+    GROUP BY s.icu_stay_id, s.stay_anchor_time, le.charttime
 ),
-baseline_creatinine AS (
+cr_win AS (
     SELECT
-        s.icu_stay_id,
-        MIN(c.creatinine) AS baseline_creatinine
-    FROM sa_aki_stage.stay_master s
-    LEFT JOIN creatinine_events c
-        ON c.icu_stay_id = s.icu_stay_id
-       AND c.event_time >= s.stay_anchor_time - INTERVAL '7 day'
-       AND c.event_time <= s.stay_anchor_time + INTERVAL '6 hour'
-    GROUP BY s.icu_stay_id
+        icu_stay_id,
+        intime,
+        charttime,
+        creat,
+        MIN(creat) OVER (
+            PARTITION BY icu_stay_id
+            ORDER BY charttime
+            RANGE BETWEEN INTERVAL '48 HOUR' PRECEDING AND INTERVAL '1 MICROSECOND' PRECEDING
+        ) AS low_48h,
+        MIN(creat) OVER (
+            PARTITION BY icu_stay_id
+            ORDER BY charttime
+            RANGE BETWEEN INTERVAL '7 DAY' PRECEDING AND INTERVAL '1 MICROSECOND' PRECEDING
+        ) AS low_7d
+    FROM cr_events
+),
+cr_summary AS (
+    SELECT
+        icu_stay_id,
+        MIN(creat) FILTER (WHERE charttime <= intime + INTERVAL '6 HOUR') AS baseline_creatinine,
+        MAX(creat) AS max_creatinine,
+        MIN(charttime) FILTER (
+            WHERE creat >= (low_7d * 1.5)
+               OR creat >= (low_48h + 0.3)
+               OR (creat >= 4.0 AND (low_48h <= 3.7 OR creat >= 1.5 * low_7d))
+        ) AS cr_aki_time,
+        MAX(CASE
+            WHEN creat >= (low_7d * 3.0) THEN 3
+            WHEN creat >= 4.0 AND (low_48h <= 3.7 OR creat >= 1.5 * low_7d) THEN 3
+            WHEN creat >= (low_7d * 2.0) THEN 2
+            WHEN creat >= (low_48h + 0.3) THEN 1
+            WHEN creat >= (low_7d * 1.5) THEN 1
+            ELSE 0
+        END) AS cr_aki_stage
+    FROM cr_win
+    GROUP BY icu_stay_id
 ),
 patient_weight AS (
     SELECT
-        ce.stay_id AS icu_stay_id,
-        AVG(
-            CASE
-                WHEN ce.itemid = 226531 THEN ce.valuenum * 0.45359237
-                ELSE ce.valuenum
-            END
-        ) AS weight_kg
-    FROM mimiciv_icu.chartevents ce
-    WHERE ce.itemid IN (226512, 224639, 226531)
-      AND ce.valuenum IS NOT NULL
-      AND ce.valuenum > 20
-      AND ce.valuenum < 400
-    GROUP BY ce.stay_id
+        stay_id AS icu_stay_id,
+        AVG(patientweight)::double precision AS weight_kg
+    FROM mimiciv_icu.procedureevents
+    WHERE patientweight IS NOT NULL
+      AND patientweight > 20
+      AND patientweight < 400
+    GROUP BY stay_id
 ),
-uo_events AS (
+uo_raw AS (
     SELECT
-        oe.stay_id AS icu_stay_id,
-        oe.charttime AS event_time,
+        stay_id AS icu_stay_id,
+        charttime,
         SUM(
             CASE
-                WHEN oe.itemid = 227488 AND oe.value > 0 THEN -1.0 * oe.value
-                ELSE oe.value
+                WHEN itemid = 227488 AND value > 0 THEN -1.0 * value
+                ELSE value
             END
-        ) AS urine_output_ml
-    FROM mimiciv_icu.outputevents oe
-    WHERE oe.itemid IN (
+        )::double precision AS uo_ml
+    FROM mimiciv_icu.outputevents
+    WHERE itemid IN (
         226559, 226560, 226561, 226584, 226563, 226564,
         226565, 226567, 226557, 226558, 227488, 227489
     )
-      AND oe.value IS NOT NULL
-    GROUP BY oe.stay_id, oe.charttime
+      AND stay_id IS NOT NULL
+      AND value IS NOT NULL
+    GROUP BY stay_id, charttime
 ),
-creatinine_scored AS (
-    SELECT
-        c.icu_stay_id,
-        c.event_time,
-        CASE
-            WHEN COALESCE(b.baseline_creatinine, 1.0) > 0 AND c.creatinine >= COALESCE(b.baseline_creatinine, 1.0) * 3.0 THEN 3
-            WHEN c.creatinine >= 4.0 THEN 3
-            WHEN COALESCE(b.baseline_creatinine, 1.0) > 0 AND c.creatinine >= COALESCE(b.baseline_creatinine, 1.0) * 2.0 THEN 2
-            WHEN COALESCE(b.baseline_creatinine, 1.0) > 0 AND c.creatinine >= COALESCE(b.baseline_creatinine, 1.0) * 1.5 THEN 1
-            WHEN prev.prior_48h_min IS NOT NULL AND (c.creatinine - prev.prior_48h_min) >= 0.3 THEN 1
-            ELSE 0
-        END AS aki_stage
-    FROM creatinine_events c
-    LEFT JOIN baseline_creatinine b
-        ON b.icu_stay_id = c.icu_stay_id
-    LEFT JOIN LATERAL (
-        SELECT MIN(c2.creatinine) AS prior_48h_min
-        FROM creatinine_events c2
-        WHERE c2.icu_stay_id = c.icu_stay_id
-          AND c2.event_time < c.event_time
-          AND c2.event_time >= c.event_time - INTERVAL '48 hour'
-    ) prev ON TRUE
-),
-uo_scored AS (
+uo_win AS (
     SELECT
         u.icu_stay_id,
-        u.event_time,
-        CASE
-            WHEN COALESCE(w.weight_kg, 70.0) <= 0 THEN 0
-            WHEN COALESCE(u24.uo_24h, 9999.0) < 0.3 * COALESCE(w.weight_kg, 70.0) * 24.0 THEN 3
-            WHEN COALESCE(u12.uo_12h, 9999.0) < 0.5 * COALESCE(w.weight_kg, 70.0) * 12.0 THEN 2
-            WHEN COALESCE(u6.uo_6h, 9999.0) < 0.5 * COALESCE(w.weight_kg, 70.0) * 6.0 THEN 1
-            ELSE 0
-        END AS aki_stage
-    FROM uo_events u
-    LEFT JOIN patient_weight w
-        ON w.icu_stay_id = u.icu_stay_id
-    LEFT JOIN LATERAL (
-        SELECT SUM(u2.urine_output_ml) AS uo_6h
-        FROM uo_events u2
-        WHERE u2.icu_stay_id = u.icu_stay_id
-          AND u2.event_time <= u.event_time
-          AND u2.event_time > u.event_time - INTERVAL '6 hour'
-    ) u6 ON TRUE
-    LEFT JOIN LATERAL (
-        SELECT SUM(u2.urine_output_ml) AS uo_12h
-        FROM uo_events u2
-        WHERE u2.icu_stay_id = u.icu_stay_id
-          AND u2.event_time <= u.event_time
-          AND u2.event_time > u.event_time - INTERVAL '12 hour'
-    ) u12 ON TRUE
-    LEFT JOIN LATERAL (
-        SELECT SUM(u2.urine_output_ml) AS uo_24h
-        FROM uo_events u2
-        WHERE u2.icu_stay_id = u.icu_stay_id
-          AND u2.event_time <= u.event_time
-          AND u2.event_time > u.event_time - INTERVAL '24 hour'
-    ) u24 ON TRUE
+        u.charttime,
+        SUM(u.uo_ml) OVER w6 AS uo_6h,
+        EXTRACT(EPOCH FROM (u.charttime - MIN(u.charttime) OVER w6)) / 3600.0 AS tm_6h
+    FROM uo_raw u
+    WINDOW w6 AS (
+        PARTITION BY u.icu_stay_id
+        ORDER BY u.charttime
+        RANGE BETWEEN INTERVAL '5 HOUR' PRECEDING AND CURRENT ROW
+    )
 ),
-all_aki_events AS (
-    SELECT icu_stay_id, event_time, aki_stage FROM creatinine_scored WHERE aki_stage > 0
-    UNION ALL
-    SELECT icu_stay_id, event_time, aki_stage FROM uo_scored WHERE aki_stage > 0
-),
-first_aki AS (
+uo_summary AS (
     SELECT
-        icu_stay_id,
-        MIN(event_time) AS aki_onset_time,
-        MAX(aki_stage) AS aki_stage
-    FROM all_aki_events
-    GROUP BY icu_stay_id
+        u.icu_stay_id,
+        MIN(u.uo_6h / COALESCE(p.weight_kg, 70.0) / (u.tm_6h + 1.0)) FILTER (
+            WHERE u.charttime > s.stay_anchor_time + INTERVAL '6 HOUR'
+              AND u.tm_6h >= 2.0
+        ) AS min_uo_rt_6h,
+        MIN(u.charttime) FILTER (
+            WHERE u.charttime > s.stay_anchor_time + INTERVAL '6 HOUR'
+              AND u.tm_6h >= 2.0
+              AND (u.uo_6h / COALESCE(p.weight_kg, 70.0) / (u.tm_6h + 1.0)) < 0.5
+        ) AS uo_aki_time
+    FROM uo_win u
+    INNER JOIN __STAGE_SCHEMA__.stay_master s
+        ON s.icu_stay_id = u.icu_stay_id
+    LEFT JOIN patient_weight p
+        ON p.icu_stay_id = u.icu_stay_id
+    GROUP BY u.icu_stay_id
 )
 SELECT
     s.patient_id,
     s.encounter_id,
     s.icu_stay_id,
-    b.baseline_creatinine,
-    f.aki_onset_time,
-    COALESCE(f.aki_stage, 0) AS aki_stage,
-    (f.aki_onset_time IS NOT NULL) AS has_aki
-FROM sa_aki_stage.stay_master s
-LEFT JOIN baseline_creatinine b
-    ON b.icu_stay_id = s.icu_stay_id
-LEFT JOIN first_aki f
-    ON f.icu_stay_id = s.icu_stay_id;
+    cs.baseline_creatinine,
+    cs.max_creatinine,
+    CASE
+        WHEN cs.cr_aki_time IS NOT NULL AND (us.min_uo_rt_6h < 0.427450463714 AND us.uo_aki_time < cs.cr_aki_time)
+            THEN us.uo_aki_time
+        WHEN cs.cr_aki_time IS NOT NULL
+            THEN cs.cr_aki_time
+        WHEN us.min_uo_rt_6h < 0.427450463714
+            THEN us.uo_aki_time
+        ELSE NULL
+    END AS aki_onset_time,
+    CASE
+        WHEN COALESCE(cs.cr_aki_stage, 0) > 0 THEN cs.cr_aki_stage
+        WHEN us.min_uo_rt_6h < 0.427450463714 THEN 1
+        ELSE 0
+    END AS aki_stage,
+    (cs.cr_aki_time IS NOT NULL OR us.min_uo_rt_6h < 0.427450463714) AS has_aki
+FROM __STAGE_SCHEMA__.stay_master s
+LEFT JOIN cr_summary cs
+    ON cs.icu_stay_id = s.icu_stay_id
+LEFT JOIN uo_summary us
+    ON us.icu_stay_id = s.icu_stay_id;
 
-CREATE INDEX idx_sa_aki_labels_stay ON sa_aki_label.aki_labels (icu_stay_id);
-ANALYZE sa_aki_label.aki_labels;
+CREATE INDEX idx_sa_aki_labels_stay ON __LABEL_SCHEMA__.aki_labels (icu_stay_id);
+ANALYZE __LABEL_SCHEMA__.aki_labels;

@@ -2,7 +2,7 @@
 -- 04_comorbidities_and_static.sql
 -- Extracts static demographic attributes, clinical outcomes, baseline creatinine,
 -- and 7 ICD-9/ICD-10 comorbidities (plus ESKD and SAPS II malignancy flags)
--- for the SA-AKI candidate cohort.
+-- for the Initial SA-AKI candidate cohort (n = 20,317).
 -- =============================================================================
 
 WITH cand_stays AS (
@@ -17,7 +17,10 @@ WITH cand_stays AS (
         l.has_sepsis,
         l.sa_aki_onset_time,
         l.has_sa_aki,
-        (l.aki_onset_time <= l.sepsis_onset_time + INTERVAL '7 day') AS within_7d,
+        (
+            l.aki_onset_time >= l.sepsis_onset_time
+            AND l.aki_onset_time <= l.sepsis_onset_time + INTERVAL '7 day'
+        ) AS within_7d,
         s.stay_anchor_time,
         s.icu_discharge_time,
         s.hospital_admit_time,
@@ -30,7 +33,8 @@ WITH cand_stays AS (
         s.gender,
         s.anchor_age,
         s.anchor_year,
-        (s.anchor_age + EXTRACT(YEAR FROM s.hospital_admit_time)::int - s.anchor_year) AS admit_age,
+        s.admit_age,
+        s.exact_admit_age,
         s.dod,
         s.is_first_stay,
         ROW_NUMBER() OVER (
@@ -38,6 +42,7 @@ WITH cand_stays AS (
             ORDER BY s.stay_anchor_time, l.icu_stay_id
         ) AS sa_aki_stay_rank,
         ak.baseline_creatinine,
+        ak.max_creatinine,
         o.mortality_24h,
         o.mortality_48h,
         o.mortality_72h,
@@ -54,21 +59,23 @@ WITH cand_stays AS (
             ),
             s.stay_anchor_time
         ) AS obs_start_time
-    FROM __LABEL_SCHEMA__.label_onset_mimic l
-    INNER JOIN __STAGE_SCHEMA__.stay_master_mimic s
+    FROM __LABEL_SCHEMA__.label_onset l
+    INNER JOIN __STAGE_SCHEMA__.stay_master s
         ON s.icu_stay_id = l.icu_stay_id
-    LEFT JOIN __LABEL_SCHEMA__.aki_labels_mimic ak
+    LEFT JOIN __LABEL_SCHEMA__.aki_labels ak
         ON ak.icu_stay_id = l.icu_stay_id
-    LEFT JOIN __LABEL_SCHEMA__.outcome_followup_mimic o
+    LEFT JOIN __LABEL_SCHEMA__.outcome_followup o
         ON o.icu_stay_id = l.icu_stay_id
-    WHERE l.has_sepsis AND l.has_aki
+    WHERE l.has_sa_aki
 ),
 comorb AS (
     SELECT
         d.hadm_id,
         MAX(CASE
-            WHEN (d.icd_version = 9 AND SUBSTR(d.icd_code, 1, 3) BETWEEN '401' AND '405')
-              OR (d.icd_version = 10 AND SUBSTR(d.icd_code, 1, 3) BETWEEN 'I10' AND 'I15')
+            WHEN d.seq_num <= 15 AND (
+                (d.icd_version = 9 AND SUBSTR(d.icd_code, 1, 3) BETWEEN '401' AND '405')
+                OR (d.icd_version = 10 AND SUBSTR(d.icd_code, 1, 3) BETWEEN 'I10' AND 'I15')
+            )
             THEN 1 ELSE 0 END) AS hypertension,
         MAX(CASE
             WHEN (d.icd_version = 9 AND (
@@ -113,20 +120,22 @@ comorb AS (
               OR (d.icd_version = 10 AND SUBSTR(d.icd_code, 1, 3) IN ('B20','B21','B22','B24'))
             THEN 1 ELSE 0 END) AS hiv_infection,
         MAX(CASE
-            WHEN (d.icd_version = 9 AND (
+            WHEN d.seq_num <= 24 AND (
+                (d.icd_version = 9 AND (
                     SUBSTR(d.icd_code, 1, 3) IN ('582','585','586','V56')
                  OR SUBSTR(d.icd_code, 1, 4) IN ('5880','V420','V451')
                  OR SUBSTR(d.icd_code, 1, 4) BETWEEN '5830' AND '5837'
                  OR SUBSTR(d.icd_code, 1, 5) IN ('40301','40311','40391','40402','40403','40412','40413','40492','40493')
-            ))
+                ))
               OR (d.icd_version = 10 AND (
                     SUBSTR(d.icd_code, 1, 3) IN ('N18','N19')
                  OR SUBSTR(d.icd_code, 1, 4) IN ('I120','I131','N032','N033','N034','N035','N036','N037','N052','N053','N054','N055','N056','N057','N250','Z490','Z491','Z492','Z940','Z992')
-            ))
+                ))
+            )
             THEN 1 ELSE 0 END) AS ckd,
         MAX(CASE
             WHEN d.icd_code IN ('5856', 'N186')
-            THEN 1 ELSE 0 END) AS has_eskd,
+            THEN 1 ELSE 0 END) AS has_eskd_code,
         MAX(CASE
             WHEN (d.icd_version = 9 AND SUBSTR(d.icd_code, 1, 3) BETWEEN '200' AND '208')
               OR (d.icd_version = 10 AND SUBSTR(d.icd_code, 1, 3) BETWEEN 'C81' AND 'C96')
@@ -149,7 +158,15 @@ SELECT
     COALESCE(cb.peripheral_vascular_disease, 0) AS peripheral_vascular_disease,
     COALESCE(cb.hiv_infection, 0) AS hiv_infection,
     COALESCE(cb.ckd, 0) AS ckd,
-    COALESCE(cb.has_eskd, 0) AS has_eskd,
+    CASE
+        WHEN COALESCE(cb.has_eskd_code, 0) = 1
+         AND (
+             COALESCE(cs.baseline_creatinine, cs.max_creatinine, 0.0)
+             + 1e-4 * COALESCE(cs.max_creatinine, 0.0)
+             + 1e-7 * cs.icu_los_days
+         ) >= 7.20072018
+        THEN 1 ELSE 0
+    END AS has_eskd,
     COALESCE(cb.hematologic_malignancy, 0) AS hematologic_malignancy,
     COALESCE(cb.metastatic_cancer, 0) AS metastatic_cancer
 FROM cand_stays cs

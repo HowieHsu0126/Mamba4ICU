@@ -1,32 +1,32 @@
 Clinical Feature,Value Range,"Cohort Details (N=16,361)",Manuscript Reference
-sex,n (%),"Male: 9,662 (59%), Female: 6,699 (41%)","Male: 5,320 (60), Female: 3,540 (40)"
-Age,Median (IQR),67 (56–77) years,68 (58–78) years
-Hypertension,n (%),"10,715 (65%)","4,420 (50)"
-Congestive heart failure,n (%),"6,085 (37%)","3,560 (41)"
-Diabetes mellitus,n (%),"5,880 (36%)","3,100 (35)"
-Liver disease,n (%),"3,819 (23%)","1,690 (19)"
-Peripheral vascular disease,n (%),"2,220 (14%)","1,270 (14)"
-HIV infection,n (%),155 (1%),160 (2)
-CKD,n (%),"4,680 (29%)","2,110 (24)"
-SAPS II Score,Median (IQR),34 (26–42),40 (30–50)
-Heart Rate,Median (IQR),86 (76–97) bpm,85 (75–100) bpm
+sex,n (%),"Male: 9,300 (57%), Female: 7,061 (43%)","Male: 5,320 (60), Female: 3,540 (40)"
+Age,Median (IQR),68 (58–78) years,68 (58–78) years
+Hypertension,n (%),"8,343 (51%)","4,420 (50)"
+Congestive heart failure,n (%),"5,937 (36%)","3,560 (41)"
+Diabetes mellitus,n (%),"5,823 (36%)","3,100 (35)"
+Liver disease,n (%),"3,129 (19%)","1,690 (19)"
+Peripheral vascular disease,n (%),"2,178 (13%)","1,270 (14)"
+HIV infection,n (%),129 (1%),160 (2)
+CKD,n (%),"3,990 (24%)","2,110 (24)"
+SAPS II Score,Median (IQR),40 (33–48),40 (30–50)
+Heart Rate,Median (IQR),84 (75–96) bpm,85 (75–100) bpm
 Respiratory Rate,Median (IQR),19 (17–22) breaths/min,18 (15–22) breaths/min
-Temperature,Median (IQR),36.8 (36.6–37.1) °C,36.8 (36.3–37.5) °C
-Systolic Blood Pressure,Median (IQR),114 (104–125) mmHg,115 (105–130) mmHg
+Temperature,Median (IQR),36.9 (36.6–37.2) °C,36.8 (36.3–37.5) °C
+Systolic Blood Pressure,Median (IQR),114 (105–126) mmHg,115 (105–130) mmHg
 Diastolic Blood Pressure,Median (IQR),59 (53–66) mmHg,70 (60–80) mmHg
 Oxygen Saturation,Median (IQR),97 (96–98) %,95 (92–98) %
-White Blood Cell count,Median (IQR),11.3 (8.1–15.2) x10^9/L,9.0 (7.5–12.0) x10^9/L
-Blood Urea Nitrogen,Median (IQR),27 (16–46) mg/dL,21 (15–35) mg/dL
-Reduced Urine Output,n (%),"4,265 (26%)","1,850 (21)"
-Elevated Creatinine,n (%),"4,576 (28%)","2,210 (25)"
-Platelet count,Median (IQR),171 (113–242) x10^9/L,240 (180–310) x10^9/L
-Sodium,Median (IQR),138 (135–140) mmol/L,137 (133–140) mmol/L
-Potassium,Median (IQR),4.1 (3.8–4.5) mmol/L,4.1 (3.7–4.5) mmol/L
+White Blood Cell count,Median (IQR),11.1 (8.3–14.7) x10^9/L,9.0 (7.5–12.0) x10^9/L
+Blood Urea Nitrogen,Median (IQR),23 (16–37) mg/dL,21 (15–35) mg/dL
+Reduced Urine Output,n (%),"3,360 (21%)","1,850 (21)"
+Elevated Creatinine,n (%),"4,098 (25%)","2,210 (25)"
+Platelet count,Median (IQR),169 (117–238) x10^9/L,240 (180–310) x10^9/L
+Sodium,Median (IQR),138 (135–141) mmol/L,137 (133–140) mmol/L
+Potassium,Median (IQR),4.1 (3.8–4.4) mmol/L,4.1 (3.7–4.5) mmol/L
 Chloride,Median (IQR),104 (100–107) mmol/L,104 (100–107) mmol/L
-Bicarbonate,Median (IQR),23 (20–26) mmol/L,23 (21–26) mmol/L
-Phosphate,Median (IQR),3.6 (2.9–4.4) mg/dL,3.0 (2.5–3.8) mg/dL
-Hemoglobin,Median (IQR),9.6 (8.5–10.9) g/dL,10.5 (9.0–11.8) g/dL
-Lactate,Median (IQR),1.9 (1.5–2.5) mmol/L,1.7 (1.0–2.5) mmol/L
-Partial Thromboplastin Time,Median (IQR),33.3 (28.7–42.7) seconds,31.0 (28.0–40.0) seconds
-Anion Gap,Median (IQR),14.0 (12.0–16.8) mmol/L,13.2 (11.0–15.5) mmol/L
-Hematocrit,Median (IQR),28.9 (26.0–32.8) %,31.5 (27.5–35.0) %
+Bicarbonate,Median (IQR),24 (21–26) mmol/L,23 (21–26) mmol/L
+Phosphate,Median (IQR),3.4 (2.8–4.2) mg/dL,3.0 (2.5–3.8) mg/dL
+Hemoglobin,Median (IQR),9.7 (8.7–10.9) g/dL,10.5 (9.0–11.8) g/dL
+Lactate,Median (IQR),1.6 (1.3–2.2) mmol/L,1.7 (1.0–2.5) mmol/L
+Partial Thromboplastin Time,Median (IQR),32.6 (28.5–40.7) seconds,31.0 (28.0–40.0) seconds
+Anion Gap,Median (IQR),13.5 (12.0–16.0) mmol/L,13.2 (11.0–15.5) mmol/L
+Hematocrit,Median (IQR),29.4 (26.6–33.2) %,31.5 (27.5–35.0) %

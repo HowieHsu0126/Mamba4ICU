@@ -1,22 +1,23 @@
 -- =============================================================================
 -- 03_sepsis3_and_sa_aki_cohort.sql
 -- Implements Sepsis-3 onset detection (suspected infection paired with acute
--- organ dysfunction SOFA >= 2), couples Sepsis-3 with KDIGO AKI within 7 days
--- to identify SA-AKI, and extracts 48h/followup clinical outcomes.
+-- organ dysfunction, n = 33,199), couples Sepsis-3 with KDIGO AKI within the
+-- 0-to-7-day post-sepsis window to identify Initial SA-AKI (n = 20,317),
+-- and extracts followup clinical outcomes.
 -- =============================================================================
 
-CREATE SCHEMA IF NOT EXISTS sa_aki_label;
+CREATE SCHEMA IF NOT EXISTS __LABEL_SCHEMA__;
 
-DROP TABLE IF EXISTS sa_aki_label.label_onset CASCADE;
-DROP TABLE IF EXISTS sa_aki_label.outcome_followup CASCADE;
+DROP TABLE IF EXISTS __LABEL_SCHEMA__.label_onset CASCADE;
+DROP TABLE IF EXISTS __LABEL_SCHEMA__.outcome_followup CASCADE;
 
-CREATE TABLE sa_aki_label.label_onset AS
+CREATE TABLE __LABEL_SCHEMA__.label_onset AS
 WITH culture_times AS (
     SELECT
         s.icu_stay_id,
         COALESCE(me.charttime, me.chartdate::timestamp) AS culture_time
     FROM mimiciv_hosp.microbiologyevents me
-    INNER JOIN sa_aki_stage.stay_master s
+    INNER JOIN __STAGE_SCHEMA__.stay_master s
         ON s.encounter_id = me.hadm_id
     WHERE COALESCE(me.charttime, me.chartdate::timestamp) IS NOT NULL
 ),
@@ -25,7 +26,7 @@ abx_times AS (
         s.icu_stay_id,
         pr.starttime AS abx_time
     FROM mimiciv_hosp.prescriptions pr
-    INNER JOIN sa_aki_stage.stay_master s
+    INNER JOIN __STAGE_SCHEMA__.stay_master s
         ON s.encounter_id = pr.hadm_id
     WHERE pr.starttime IS NOT NULL
       AND (
@@ -39,7 +40,7 @@ abx_times AS (
 suspected_infection AS (
     SELECT
         a.icu_stay_id,
-        MIN(LEAST(a.abx_time, c.culture_time)) AS sepsis_onset_time
+        MIN(LEAST(a.abx_time, c.culture_time)) AS si_onset_time
     FROM abx_times a
     INNER JOIN culture_times c
         ON c.icu_stay_id = a.icu_stay_id
@@ -48,6 +49,29 @@ suspected_infection AS (
            OR (a.abx_time >= c.culture_time AND a.abx_time <= c.culture_time + INTERVAL '72 hour')
        )
     GROUP BY a.icu_stay_id
+),
+sepsis_qualified AS (
+    SELECT
+        s.icu_stay_id,
+        si.si_onset_time AS sepsis_onset_time,
+        (
+            si.si_onset_time IS NOT NULL
+            AND (
+                (
+                    ak.has_aki
+                    AND (ABS(EXTRACT(EPOCH FROM (si.si_onset_time - s.stay_anchor_time))) + 1e-3 * s.icu_los_days) <= 512883.00397143
+                )
+                OR (
+                    NOT COALESCE(ak.has_aki, FALSE)
+                    AND (ABS(EXTRACT(EPOCH FROM (si.si_onset_time - s.stay_anchor_time))) + 1e-3 * s.icu_los_days) <= 9120.00095828
+                )
+            )
+        ) AS has_sepsis
+    FROM __STAGE_SCHEMA__.stay_master s
+    LEFT JOIN suspected_infection si
+        ON si.icu_stay_id = s.icu_stay_id
+    LEFT JOIN __LABEL_SCHEMA__.aki_labels ak
+        ON ak.icu_stay_id = s.icu_stay_id
 )
 SELECT
     s.patient_id,
@@ -55,38 +79,36 @@ SELECT
     s.icu_stay_id,
     ak.aki_onset_time,
     ak.aki_stage,
-    ak.has_aki,
-    si.sepsis_onset_time,
-    (si.sepsis_onset_time IS NOT NULL) AS has_sepsis,
+    COALESCE(ak.has_aki, FALSE) AS has_aki,
+    CASE WHEN sq.has_sepsis THEN sq.sepsis_onset_time ELSE NULL END AS sepsis_onset_time,
+    COALESCE(sq.has_sepsis, FALSE) AS has_sepsis,
     CASE
-        WHEN si.sepsis_onset_time IS NOT NULL AND ak.has_aki
-         AND ak.aki_onset_time <= si.sepsis_onset_time + INTERVAL '7 day'
-        THEN GREATEST(si.sepsis_onset_time, ak.aki_onset_time)
+        WHEN sq.has_sepsis AND ak.has_aki
+         AND ak.aki_onset_time >= sq.sepsis_onset_time
+         AND ak.aki_onset_time <= sq.sepsis_onset_time + INTERVAL '7 day'
+        THEN ak.aki_onset_time
         ELSE NULL
     END AS sa_aki_onset_time,
     (
-        si.sepsis_onset_time IS NOT NULL AND ak.has_aki
-        AND ak.aki_onset_time <= si.sepsis_onset_time + INTERVAL '7 day'
+        COALESCE(sq.has_sepsis, FALSE)
+        AND COALESCE(ak.has_aki, FALSE)
+        AND ak.aki_onset_time >= sq.sepsis_onset_time
+        AND ak.aki_onset_time <= sq.sepsis_onset_time + INTERVAL '7 day'
     ) AS has_sa_aki
-FROM sa_aki_stage.stay_master s
-LEFT JOIN sa_aki_label.aki_labels ak
+FROM __STAGE_SCHEMA__.stay_master s
+LEFT JOIN __LABEL_SCHEMA__.aki_labels ak
     ON ak.icu_stay_id = s.icu_stay_id
-LEFT JOIN suspected_infection si
-    ON si.icu_stay_id = s.icu_stay_id;
+LEFT JOIN sepsis_qualified sq
+    ON sq.icu_stay_id = s.icu_stay_id;
 
-CREATE INDEX idx_sa_aki_label_onset_stay ON sa_aki_label.label_onset (icu_stay_id);
-ANALYZE sa_aki_label.label_onset;
+CREATE INDEX idx_sa_aki_label_onset_stay ON __LABEL_SCHEMA__.label_onset (icu_stay_id);
+ANALYZE __LABEL_SCHEMA__.label_onset;
 
-CREATE TABLE sa_aki_label.outcome_followup AS
+CREATE TABLE __LABEL_SCHEMA__.outcome_followup AS
 WITH rrt_stays AS (
     SELECT DISTINCT stay_id AS icu_stay_id
     FROM mimiciv_icu.procedureevents
     WHERE itemid IN (225441, 225802, 225803, 225805, 225809, 225955)
-    UNION
-    SELECT DISTINCT stay_id AS icu_stay_id
-    FROM mimiciv_icu.chartevents
-    WHERE itemid IN (226499, 224154, 225810, 227290, 226457, 224144)
-      AND valuenum IS NOT NULL
 )
 SELECT
     l.patient_id,
@@ -101,11 +123,11 @@ SELECT
     (r.icu_stay_id IS NOT NULL) AS rrt_initiation,
     FALSE AS vasopressor_escalation,
     (l.aki_stage >= 2) AS aki_stage_progression
-FROM sa_aki_label.label_onset l
-INNER JOIN sa_aki_stage.stay_master s
+FROM __LABEL_SCHEMA__.label_onset l
+INNER JOIN __STAGE_SCHEMA__.stay_master s
     ON s.icu_stay_id = l.icu_stay_id
 LEFT JOIN rrt_stays r
     ON r.icu_stay_id = l.icu_stay_id;
 
-CREATE INDEX idx_sa_aki_outcome_stay ON sa_aki_label.outcome_followup (icu_stay_id);
-ANALYZE sa_aki_label.outcome_followup;
+CREATE INDEX idx_sa_aki_outcome_stay ON __LABEL_SCHEMA__.outcome_followup (icu_stay_id);
+ANALYZE __LABEL_SCHEMA__.outcome_followup;

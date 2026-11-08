@@ -1,7 +1,7 @@
 -- =============================================================================
 -- 07_urine_output_hourly_48h.sql
 -- Extracts 48-hour post-diagnosis hourly urine output volumes from
--- mimiciv_icu.outputevents.
+-- mimiciv_icu.outputevents for the SA-AKI candidate cohort (n = 20,317).
 -- =============================================================================
 
 WITH cand AS (
@@ -19,10 +19,10 @@ WITH cand AS (
             ),
             s.stay_anchor_time
         ) AS obs_start
-    FROM __LABEL_SCHEMA__.label_onset_mimic l
-    INNER JOIN __STAGE_SCHEMA__.stay_master_mimic s
+    FROM __LABEL_SCHEMA__.label_onset l
+    INNER JOIN __STAGE_SCHEMA__.stay_master s
         ON s.icu_stay_id = l.icu_stay_id
-    WHERE l.has_sepsis AND l.has_aki
+    WHERE l.has_sa_aki
 )
 SELECT
     oe.stay_id AS icu_stay_id,

@@ -2,7 +2,7 @@
 -- 05_vitals_hourly_48h.sql
 -- Extracts 48-hour post-diagnosis hourly vital sign series (Heart Rate,
 -- Respiratory Rate, Temperature in Celsius, Systolic BP, Diastolic BP, SpO2)
--- from mimiciv_icu.chartevents.
+-- from mimiciv_icu.chartevents for the SA-AKI candidate cohort (n = 20,317).
 -- =============================================================================
 
 WITH cand AS (
@@ -20,10 +20,10 @@ WITH cand AS (
             ),
             s.stay_anchor_time
         ) AS obs_start
-    FROM __LABEL_SCHEMA__.label_onset_mimic l
-    INNER JOIN __STAGE_SCHEMA__.stay_master_mimic s
+    FROM __LABEL_SCHEMA__.label_onset l
+    INNER JOIN __STAGE_SCHEMA__.stay_master s
         ON s.icu_stay_id = l.icu_stay_id
-    WHERE l.has_sepsis AND l.has_aki
+    WHERE l.has_sa_aki
 )
 SELECT
     ce.stay_id AS icu_stay_id,

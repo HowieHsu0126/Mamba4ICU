@@ -147,3 +147,40 @@ def test_postgresql_scripts_present() -> None:
         assert p.exists() and p.stat().st_size > 100, f"Missing or empty SQL script: {name}"
         content = p.read_text(encoding="utf-8").upper()
         assert "SELECT" in content and "FROM" in content
+
+
+def test_cohort_flow_and_no_sorting_truncation() -> None:
+    import json
+    import pandas as pd
+
+    root = Path(__file__).resolve().parents[2]
+    preprocess_src = (root / "libs" / "data" / "preprocess.py").read_text(encoding="utf-8")
+    assert "iloc[:" not in preprocess_src, "Sorting truncation (iloc[:N]) must not be used in preprocess.py"
+
+    raw_flow = json.loads((root / "input" / "raw" / "flow_counts.json").read_text(encoding="utf-8"))
+    cohort_flow = json.loads((root / "output" / "results" / "cohort_flow.json").read_text(encoding="utf-8"))
+
+    assert raw_flow["sepsis_stays"] == 33199
+    assert raw_flow["aki_stays"] == 34854
+    assert raw_flow["sa_aki_within_7d_stays"] == 20317
+    assert raw_flow["excluded_los_lt_24h"] == 1523
+    assert raw_flow["excluded_age_out_of_range"] == 1015
+    assert raw_flow["excluded_eskd"] == 304
+    assert raw_flow["excluded_missing_vitals"] == 1114
+    assert raw_flow["final_sa_aki_cohort_n"] == 16361
+
+    assert cohort_flow["manuscript_sepsis_n"] == 33199
+    assert cohort_flow["manuscript_aki_n"] == 34854
+    assert cohort_flow["manuscript_sa_aki_initial_n"] == 20317
+    assert cohort_flow["manuscript_excluded_los_lt_24h"] == 1523
+    assert cohort_flow["manuscript_excluded_age_out_of_range"] == 1015
+    assert cohort_flow["manuscript_excluded_eskd"] == 304
+    assert cohort_flow["manuscript_excluded_missing_vitals"] == 1114
+    assert cohort_flow["final_sa_aki_cohort_n"] == 16361
+
+    static_df = pd.read_parquet(root / "input" / "raw" / "sa_aki_candidates_static.parquet")
+    cohort_df = pd.read_parquet(root / "input" / "processed" / "sa_aki_cohort.parquet")
+    assert len(static_df) == 20317
+    assert len(cohort_df) == 16361
+    assert bool(cohort_df["within_7d"].all()) is True
+    assert bool(cohort_df["pass_hard_filters"].all()) is True
