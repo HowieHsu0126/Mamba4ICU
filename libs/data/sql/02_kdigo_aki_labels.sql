@@ -6,18 +6,18 @@
 -- Produces exact n = 34,854 AKI stays aligned with Manuscript Fig. 3.
 -- =============================================================================
 
-CREATE SCHEMA IF NOT EXISTS __LABEL_SCHEMA__;
+CREATE SCHEMA IF NOT EXISTS sa_aki_label;
 
-DROP TABLE IF EXISTS __LABEL_SCHEMA__.aki_labels CASCADE;
+DROP TABLE IF EXISTS sa_aki_label.aki_labels CASCADE;
 
-CREATE TABLE __LABEL_SCHEMA__.aki_labels AS
+CREATE TABLE sa_aki_label.aki_labels AS
 WITH cr_events AS (
     SELECT
         s.icu_stay_id,
         s.stay_anchor_time AS intime,
         le.charttime,
         AVG(le.valuenum)::double precision AS creat
-    FROM __STAGE_SCHEMA__.stay_master s
+    FROM sa_aki_stage.stay_master s
     INNER JOIN mimiciv_hosp.labevents le
         ON s.encounter_id = le.hadm_id
        AND le.itemid = 50912
@@ -121,7 +121,7 @@ uo_summary AS (
               AND (u.uo_6h / COALESCE(p.weight_kg, 70.0) / (u.tm_6h + 1.0)) < 0.5
         ) AS uo_aki_time
     FROM uo_win u
-    INNER JOIN __STAGE_SCHEMA__.stay_master s
+    INNER JOIN sa_aki_stage.stay_master s
         ON s.icu_stay_id = u.icu_stay_id
     LEFT JOIN patient_weight p
         ON p.icu_stay_id = u.icu_stay_id
@@ -148,11 +148,11 @@ SELECT
         ELSE 0
     END AS aki_stage,
     (cs.cr_aki_time IS NOT NULL OR us.min_uo_rt_6h < 0.427450463714) AS has_aki
-FROM __STAGE_SCHEMA__.stay_master s
+FROM sa_aki_stage.stay_master s
 LEFT JOIN cr_summary cs
     ON cs.icu_stay_id = s.icu_stay_id
 LEFT JOIN uo_summary us
     ON us.icu_stay_id = s.icu_stay_id;
 
-CREATE INDEX idx_sa_aki_labels_stay ON __LABEL_SCHEMA__.aki_labels (icu_stay_id);
-ANALYZE __LABEL_SCHEMA__.aki_labels;
+CREATE INDEX IF NOT EXISTS idx_sa_aki_labels_stay ON sa_aki_label.aki_labels (icu_stay_id);
+ANALYZE sa_aki_label.aki_labels;

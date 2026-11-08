@@ -145,7 +145,11 @@ def test_postgresql_scripts_present() -> None:
     for name in expected_sql:
         p = sql_dir / name
         assert p.exists() and p.stat().st_size > 100, f"Missing or empty SQL script: {name}"
-        content = p.read_text(encoding="utf-8").upper()
+        raw_text = p.read_text(encoding="utf-8")
+        assert "__STAGE_SCHEMA__" not in raw_text and "__LABEL_SCHEMA__" not in raw_text, (
+            f"Unresolved schema placeholder in {name}"
+        )
+        content = raw_text.upper()
         assert "SELECT" in content and "FROM" in content
 
 

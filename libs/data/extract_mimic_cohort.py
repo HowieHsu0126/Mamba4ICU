@@ -23,19 +23,37 @@ SELECT
     count(DISTINCT patient_id) FILTER (WHERE has_aki) AS aki_patients,
     count(*) FILTER (WHERE has_sepsis AND has_aki) AS sa_aki_all_stays,
     count(*) FILTER (WHERE has_sa_aki) AS sa_aki_within_7d_stays
-FROM __LABEL_SCHEMA__.label_onset;
+FROM sa_aki_label.label_onset;
 """
 
 
 def load_sql_template(filename: str, stage_schema: str, label_schema: str) -> str:
     sql_text = (SQL_DIR / filename).read_text(encoding="utf-8")
     if stage_schema == "pg_temp":
-        sql_text = sql_text.replace("CREATE SCHEMA IF NOT EXISTS __STAGE_SCHEMA__;", "")
+        sql_text = (
+            sql_text.replace("CREATE SCHEMA IF NOT EXISTS sa_aki_stage;", "")
+            .replace("CREATE SCHEMA IF NOT EXISTS __STAGE_SCHEMA__;", "")
+        )
+    else:
+        sql_text = (
+            sql_text.replace("CREATE SCHEMA IF NOT EXISTS sa_aki_stage;", f"CREATE SCHEMA IF NOT EXISTS {stage_schema};")
+            .replace("CREATE SCHEMA IF NOT EXISTS __STAGE_SCHEMA__;", f"CREATE SCHEMA IF NOT EXISTS {stage_schema};")
+        )
     if label_schema == "pg_temp":
-        sql_text = sql_text.replace("CREATE SCHEMA IF NOT EXISTS __LABEL_SCHEMA__;", "")
+        sql_text = (
+            sql_text.replace("CREATE SCHEMA IF NOT EXISTS sa_aki_label;", "")
+            .replace("CREATE SCHEMA IF NOT EXISTS __LABEL_SCHEMA__;", "")
+        )
+    else:
+        sql_text = (
+            sql_text.replace("CREATE SCHEMA IF NOT EXISTS sa_aki_label;", f"CREATE SCHEMA IF NOT EXISTS {label_schema};")
+            .replace("CREATE SCHEMA IF NOT EXISTS __LABEL_SCHEMA__;", f"CREATE SCHEMA IF NOT EXISTS {label_schema};")
+        )
     sql_text = (
-        sql_text.replace("__STAGE_SCHEMA__", stage_schema)
-        .replace("__LABEL_SCHEMA__", label_schema)
+        sql_text.replace("__STAGE_SCHEMA__.", f"{stage_schema}.")
+        .replace("__LABEL_SCHEMA__.", f"{label_schema}.")
+        .replace("sa_aki_stage.", f"{stage_schema}.")
+        .replace("sa_aki_label.", f"{label_schema}.")
     )
     return sql_text
 
@@ -53,6 +71,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Extract SA-AKI cohort and 48h trajectories from MIMIC-IV PostgreSQL.")
     parser.add_argument(
         "--persist-schemas",
+        "--materialize-labels",
+        dest="persist_schemas",
         action="store_true",
         help="Persist sa_aki_stage and sa_aki_label schemas instead of using session-local pg_temp tables.",
     )
@@ -87,7 +107,7 @@ def main() -> None:
             print(f"Completed {script_name} in {time.time() - t_s:.1f}s.")
 
         print("1/5 Querying global flow counts...")
-        flow_sql = FLOW_COUNTS_SQL.replace("__LABEL_SCHEMA__", label_schema)
+        flow_sql = FLOW_COUNTS_SQL.replace("sa_aki_label.", f"{label_schema}.")
         flow_df = run_query_df(conn, flow_sql)
         flow_dict = {k: int(v) for k, v in flow_df.iloc[0].to_dict().items()}
 

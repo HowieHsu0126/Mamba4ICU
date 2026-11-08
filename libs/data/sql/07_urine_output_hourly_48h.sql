@@ -19,8 +19,8 @@ WITH cand AS (
             ),
             s.stay_anchor_time
         ) AS obs_start
-    FROM __LABEL_SCHEMA__.label_onset l
-    INNER JOIN __STAGE_SCHEMA__.stay_master s
+    FROM sa_aki_label.label_onset l
+    INNER JOIN sa_aki_stage.stay_master s
         ON s.icu_stay_id = l.icu_stay_id
     WHERE l.has_sa_aki
 )

@@ -6,18 +6,18 @@
 -- and extracts followup clinical outcomes.
 -- =============================================================================
 
-CREATE SCHEMA IF NOT EXISTS __LABEL_SCHEMA__;
+CREATE SCHEMA IF NOT EXISTS sa_aki_label;
 
-DROP TABLE IF EXISTS __LABEL_SCHEMA__.label_onset CASCADE;
-DROP TABLE IF EXISTS __LABEL_SCHEMA__.outcome_followup CASCADE;
+DROP TABLE IF EXISTS sa_aki_label.label_onset CASCADE;
+DROP TABLE IF EXISTS sa_aki_label.outcome_followup CASCADE;
 
-CREATE TABLE __LABEL_SCHEMA__.label_onset AS
+CREATE TABLE sa_aki_label.label_onset AS
 WITH culture_times AS (
     SELECT
         s.icu_stay_id,
         COALESCE(me.charttime, me.chartdate::timestamp) AS culture_time
     FROM mimiciv_hosp.microbiologyevents me
-    INNER JOIN __STAGE_SCHEMA__.stay_master s
+    INNER JOIN sa_aki_stage.stay_master s
         ON s.encounter_id = me.hadm_id
     WHERE COALESCE(me.charttime, me.chartdate::timestamp) IS NOT NULL
 ),
@@ -26,7 +26,7 @@ abx_times AS (
         s.icu_stay_id,
         pr.starttime AS abx_time
     FROM mimiciv_hosp.prescriptions pr
-    INNER JOIN __STAGE_SCHEMA__.stay_master s
+    INNER JOIN sa_aki_stage.stay_master s
         ON s.encounter_id = pr.hadm_id
     WHERE pr.starttime IS NOT NULL
       AND (
@@ -67,10 +67,10 @@ sepsis_qualified AS (
                 )
             )
         ) AS has_sepsis
-    FROM __STAGE_SCHEMA__.stay_master s
+    FROM sa_aki_stage.stay_master s
     LEFT JOIN suspected_infection si
         ON si.icu_stay_id = s.icu_stay_id
-    LEFT JOIN __LABEL_SCHEMA__.aki_labels ak
+    LEFT JOIN sa_aki_label.aki_labels ak
         ON ak.icu_stay_id = s.icu_stay_id
 )
 SELECT
@@ -95,16 +95,16 @@ SELECT
         AND ak.aki_onset_time >= sq.sepsis_onset_time
         AND ak.aki_onset_time <= sq.sepsis_onset_time + INTERVAL '7 day'
     ) AS has_sa_aki
-FROM __STAGE_SCHEMA__.stay_master s
-LEFT JOIN __LABEL_SCHEMA__.aki_labels ak
+FROM sa_aki_stage.stay_master s
+LEFT JOIN sa_aki_label.aki_labels ak
     ON ak.icu_stay_id = s.icu_stay_id
 LEFT JOIN sepsis_qualified sq
     ON sq.icu_stay_id = s.icu_stay_id;
 
-CREATE INDEX idx_sa_aki_label_onset_stay ON __LABEL_SCHEMA__.label_onset (icu_stay_id);
-ANALYZE __LABEL_SCHEMA__.label_onset;
+CREATE INDEX IF NOT EXISTS idx_sa_aki_label_onset_stay ON sa_aki_label.label_onset (icu_stay_id);
+ANALYZE sa_aki_label.label_onset;
 
-CREATE TABLE __LABEL_SCHEMA__.outcome_followup AS
+CREATE TABLE sa_aki_label.outcome_followup AS
 WITH rrt_stays AS (
     SELECT DISTINCT stay_id AS icu_stay_id
     FROM mimiciv_icu.procedureevents
@@ -123,11 +123,11 @@ SELECT
     (r.icu_stay_id IS NOT NULL) AS rrt_initiation,
     FALSE AS vasopressor_escalation,
     (l.aki_stage >= 2) AS aki_stage_progression
-FROM __LABEL_SCHEMA__.label_onset l
-INNER JOIN __STAGE_SCHEMA__.stay_master s
+FROM sa_aki_label.label_onset l
+INNER JOIN sa_aki_stage.stay_master s
     ON s.icu_stay_id = l.icu_stay_id
 LEFT JOIN rrt_stays r
     ON r.icu_stay_id = l.icu_stay_id;
 
-CREATE INDEX idx_sa_aki_outcome_stay ON __LABEL_SCHEMA__.outcome_followup (icu_stay_id);
-ANALYZE __LABEL_SCHEMA__.outcome_followup;
+CREATE INDEX IF NOT EXISTS idx_sa_aki_outcome_stay ON sa_aki_label.outcome_followup (icu_stay_id);
+ANALYZE sa_aki_label.outcome_followup;
